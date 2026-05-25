@@ -59,9 +59,12 @@ def index() -> str:
     .shell {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 280px minmax(0, 1fr) 400px;
+      grid-template-columns: 280px minmax(0, 1fr);
       gap: 20px;
       padding: 20px;
+    }
+    .shell.has-agent {
+      grid-template-columns: 280px minmax(0, 1fr) 400px;
     }
     aside {
       background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 25, 1));
@@ -433,6 +436,19 @@ def index() -> str:
       box-shadow: var(--shadow-lg);
       backdrop-filter: blur(10px);
     }
+    .page {
+      min-width: 0;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 20px;
+      background: rgba(251, 252, 254, 0.96);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 24px 20px;
+      gap: 18px;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(10px);
+      margin-left: 20px;
+    }
     .agent-head {
       padding: 20px;
       border-bottom: 1px solid var(--line);
@@ -577,10 +593,6 @@ button:hover {
     @media (max-width: 1120px) {
       .shell {
         grid-template-columns: 220px minmax(0, 1fr);
-      }
-      .agent {
-        grid-column: 1 / -1;
-        min-height: 520px;
       }
       .topbar {
         flex-direction: column;
@@ -737,35 +749,49 @@ button:hover {
               <div class="legend-item"><span class="dot" style="background: var(--green);"></span><span>GHS aligned</span><strong>62%</strong></div>
               <div class="legend-item"><span class="dot" style="background: var(--amber);"></span><span>Needs review</span><strong>23%</strong></div>
               <div class="legend-item"><span class="dot" style="background: var(--red);"></span><span>Action required</span><strong>15%</strong></div>
-            </div>
+</div>
           </div>
         </article>
       </section>
     </main>
 
-    <section class="agent" aria-label="Hazsoft SDS assistant">
+    <section class="page" id="agent-page" style="display: none;">
       <div class="agent-head">
         <h2>AI Agent Dashboard</h2>
       </div>
-
       <div id="chat" aria-live="polite">
         <div class="message assistant">
           <div class="message-text">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</div>
         </div>
       </div>
-
       <form id="form">
         <input id="question" autocomplete="off" placeholder="Ask about an SDS material..." />
         <button id="send" type="submit">Ask</button>
       </form>
     </section>
-  </div>
 
-  <script>
+    <script>
     const chat = document.querySelector("#chat");
     const form = document.querySelector("#form");
     const input = document.querySelector("#question");
     const send = document.querySelector("#send");
+    const agentPage = document.querySelector("#agent-page");
+    const navItems = document.querySelectorAll(".nav-item");
+
+    function showAgentPage() {
+      document.querySelector("main").style.display = "none";
+      agentPage.style.display = "grid";
+      document.querySelector(".shell").classList.add("has-agent");
+    }
+
+    function showMainPage() {
+      agentPage.style.display = "none";
+      document.querySelector("main").style.display = "block";
+      document.querySelector(".shell").classList.remove("has-agent");
+    }
+
+    document.querySelectorAll(".nav-item")[1].addEventListener("click", showAgentPage);
+    document.querySelectorAll(".nav-item")[0].addEventListener("click", showMainPage);
 
     function addMessage(text, role, sources) {
       const node = document.createElement("div");
