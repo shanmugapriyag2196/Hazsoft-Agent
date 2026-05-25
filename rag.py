@@ -49,13 +49,23 @@ def ensure_collection(client: QdrantClient) -> None:
     if any(collection.name == QDRANT_COLLECTION for collection in collections):
         return
 
-    client.create_collection(
-        collection_name=QDRANT_COLLECTION,
-        vectors_config=VectorParams(
-            size=EMBEDDING_DIMENSION,
-            distance=Distance.COSINE,
-        ),
-    )
+    try:
+        client.create_collection(
+            collection_name=QDRANT_COLLECTION,
+            vectors_config=VectorParams(
+                size=EMBEDDING_DIMENSION,
+                distance=Distance.COSINE,
+            ),
+        )
+    except UnexpectedResponse as exc:
+        if exc.status_code == 403:
+            raise RuntimeError(
+                "Qdrant rejected collection creation with 403 Forbidden. "
+                "Create the collection manually in Qdrant Cloud, or use a Qdrant API key "
+                "with global manage access. Collection settings: "
+                f"name='{QDRANT_COLLECTION}', vector size={EMBEDDING_DIMENSION}, distance=Cosine."
+            ) from exc
+        raise
 
 
 def collection_exists(client: QdrantClient) -> bool:
