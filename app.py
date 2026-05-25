@@ -25,73 +25,123 @@ def index() -> str:
   <style>
     :root {
       color-scheme: light;
-      --bg: #f5f7fa;
+      --bg: #eef3f8;
       --panel: #ffffff;
       --ink: #172033;
       --muted: #667085;
-      --line: #d8dee8;
-      --nav: #102a43;
-      --nav-soft: #1b3d5f;
+      --line: #d6dee8;
+      --nav: #0b1f33;
+      --nav-soft: #143553;
       --green: #08745f;
       --amber: #b54708;
       --red: #b42318;
       --blue: #246bfd;
       --teal: #0e9384;
       --purple: #6941c6;
+      --shadow: 0 18px 40px rgba(16, 42, 67, 0.10);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
       font-family: Arial, Helvetica, sans-serif;
-      background: var(--bg);
+      background:
+        linear-gradient(135deg, rgba(8, 116, 95, 0.08), transparent 34%),
+        linear-gradient(315deg, rgba(36, 107, 253, 0.08), transparent 38%),
+        var(--bg);
       color: var(--ink);
     }
     .shell {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 250px minmax(0, 1fr) 360px;
+      grid-template-columns: 264px minmax(0, 1fr) 380px;
+      gap: 18px;
+      padding: 18px;
     }
     aside {
-      background: var(--nav);
+      background:
+        linear-gradient(180deg, rgba(20, 53, 83, 0.96), rgba(11, 31, 51, 1));
       color: #ffffff;
-      padding: 24px 18px;
+      border-radius: 18px;
+      padding: 24px 16px;
       display: flex;
       flex-direction: column;
-      gap: 28px;
+      gap: 26px;
+      box-shadow: var(--shadow);
     }
     .brand {
-      font-size: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 23px;
       font-weight: 800;
       letter-spacing: 0;
+      padding: 0 6px;
+    }
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: #f9fafb;
+      color: var(--nav);
+      font-weight: 900;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
     }
     nav {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 9px;
     }
     .nav-item {
       border: 0;
-      border-radius: 8px;
+      border-radius: 12px;
       background: transparent;
       color: #d9e6f2;
-      min-height: 42px;
-      padding: 0 12px;
+      min-height: 46px;
+      padding: 0 14px;
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      gap: 10px;
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
     }
+    .nav-item::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+    }
     .nav-item.active,
     .nav-item:hover {
-      background: var(--nav-soft);
+      background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
+    }
+    .nav-item.active::before {
+      background: #34d399;
+    }
+    .sidebar-foot {
+      margin-top: auto;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 14px;
+      color: #cbdced;
+      font-size: 13px;
+      line-height: 1.45;
+      background: rgba(255, 255, 255, 0.07);
+    }
+    .sidebar-foot strong {
+      display: block;
+      color: #ffffff;
+      margin-bottom: 4px;
     }
     .main {
       min-width: 0;
-      padding: 24px;
+      padding: 4px 0 4px;
       display: flex;
       flex-direction: column;
       gap: 18px;
@@ -101,12 +151,16 @@ def index() -> str:
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--line);
+      padding: 24px;
+      border: 1px solid rgba(214, 222, 232, 0.9);
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(241, 248, 247, 0.96));
+      box-shadow: var(--shadow);
     }
     h1 {
       margin: 0;
-      font-size: 26px;
+      font-size: 30px;
       letter-spacing: 0;
     }
     .subtitle {
@@ -115,56 +169,97 @@ def index() -> str:
       font-size: 14px;
     }
     .sync {
-      color: var(--green);
+      color: #ffffff;
       font-size: 13px;
       font-weight: 800;
       white-space: nowrap;
+      background: var(--green);
+      border-radius: 999px;
+      padding: 10px 14px;
+      box-shadow: 0 10px 24px rgba(8, 116, 95, 0.18);
+    }
+    .quick-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .quick-pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 10px;
+      color: var(--muted);
+      background: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
     }
     .metrics {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
+      gap: 16px;
     }
     .metric {
       background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-      min-height: 112px;
+      border: 1px solid rgba(214, 222, 232, 0.9);
+      border-radius: 16px;
+      padding: 18px;
+      min-height: 128px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      box-shadow: 0 12px 28px rgba(16, 42, 67, 0.07);
+      position: relative;
+      overflow: hidden;
+    }
+    .metric::after {
+      content: "";
+      position: absolute;
+      right: -24px;
+      top: -24px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(8, 116, 95, 0.10);
     }
     .metric-label {
       color: var(--muted);
       font-size: 13px;
       font-weight: 700;
+      position: relative;
     }
     .metric-value {
-      font-size: 34px;
+      font-size: 38px;
       font-weight: 800;
       line-height: 1;
+      position: relative;
     }
     .metric-note {
       color: var(--muted);
       font-size: 12px;
+      position: relative;
     }
     .dashboard-grid {
       display: grid;
       grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-      gap: 16px;
+      gap: 18px;
       align-items: stretch;
     }
     .panel {
       background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 18px;
+      border: 1px solid rgba(214, 222, 232, 0.9);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 14px 30px rgba(16, 42, 67, 0.08);
     }
     .panel h2 {
-      margin: 0 0 14px;
+      margin: 0 0 4px;
       font-size: 18px;
       letter-spacing: 0;
+    }
+    .panel-subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 13px;
     }
     .bar-chart {
       display: grid;
@@ -183,10 +278,11 @@ def index() -> str:
       font-weight: 700;
     }
     .bar-track {
-      height: 12px;
+      height: 14px;
       border-radius: 999px;
       background: #edf1f6;
       overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(16, 42, 67, 0.04);
     }
     .bar-fill {
       height: 100%;
@@ -205,7 +301,7 @@ def index() -> str:
       align-items: center;
     }
     .donut {
-      width: 160px;
+      width: 168px;
       aspect-ratio: 1;
       border-radius: 50%;
       background:
@@ -213,6 +309,7 @@ def index() -> str:
         conic-gradient(var(--green) 0 62%, var(--amber) 62% 85%, var(--red) 85% 100%);
       border: 1px solid var(--line);
       position: relative;
+      box-shadow: 0 18px 30px rgba(16, 42, 67, 0.12);
     }
     .donut-center {
       position: absolute;
@@ -248,16 +345,20 @@ def index() -> str:
     }
     .agent {
       min-width: 0;
-      border-left: 1px solid var(--line);
-      background: #fbfcfe;
+      border: 1px solid rgba(214, 222, 232, 0.9);
+      border-radius: 18px;
+      background: rgba(251, 252, 254, 0.96);
       display: grid;
       grid-template-rows: auto 1fr auto;
-      padding: 22px 18px;
+      padding: 20px 16px;
       gap: 14px;
+      box-shadow: var(--shadow);
     }
     .agent-head {
-      padding-bottom: 12px;
+      padding: 16px;
       border-bottom: 1px solid var(--line);
+      border-radius: 14px;
+      background: #ffffff;
     }
     .agent-head h2 {
       margin: 0;
@@ -294,7 +395,7 @@ def index() -> str:
     }
     .message {
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 14px;
       padding: 12px;
       line-height: 1.48;
       background: var(--panel);
@@ -350,7 +451,7 @@ def index() -> str:
       width: 100%;
       min-height: 44px;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 0 12px;
       font-size: 14px;
       color: var(--ink);
@@ -359,7 +460,7 @@ def index() -> str:
     button {
       min-height: 44px;
       border: 0;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 0 16px;
       background: var(--green);
       color: white;
@@ -376,8 +477,6 @@ def index() -> str:
       }
       .agent {
         grid-column: 1 / -1;
-        border-left: 0;
-        border-top: 1px solid var(--line);
         min-height: 520px;
       }
     }
@@ -387,6 +486,7 @@ def index() -> str:
       }
       aside {
         padding: 18px;
+        border-radius: 0;
       }
       nav {
         display: grid;
@@ -412,7 +512,7 @@ def index() -> str:
 <body>
   <div class="shell">
     <aside>
-      <div class="brand">Hazsoft Agent</div>
+      <div class="brand"><span class="brand-mark">H</span><span>Hazsoft Agent</span></div>
       <nav aria-label="SDS navigation">
         <button class="nav-item active" type="button">All SDS</button>
         <button class="nav-item" type="button">My Documents</button>
@@ -420,6 +520,10 @@ def index() -> str:
         <button class="nav-item" type="button">Hazard</button>
         <button class="nav-item" type="button">Settings</button>
       </nav>
+      <div class="sidebar-foot">
+        <strong>SDS Intelligence</strong>
+        15 source documents indexed with Qdrant and OpenAI embeddings.
+      </div>
     </aside>
 
     <main class="main">
@@ -427,6 +531,12 @@ def index() -> str:
         <div>
           <h1>SDS Dashboard</h1>
           <p class="subtitle">Monitor indexed safety documents, hazard levels, categories, and compliance readiness.</p>
+          <div class="quick-row">
+            <span class="quick-pill">Qdrant connected</span>
+            <span class="quick-pill">15 PDFs</span>
+            <span class="quick-pill">500 chunk size</span>
+            <span class="quick-pill">75 overlap</span>
+          </div>
         </div>
         <div class="sync">547 chunks indexed</div>
       </section>
@@ -457,6 +567,7 @@ def index() -> str:
       <section class="dashboard-grid">
         <article class="panel">
           <h2>SDS Category Bar Chart</h2>
+          <p class="panel-subtitle">Distribution of indexed SDS materials by operational category.</p>
           <div class="bar-chart">
             <div class="bar-row">
               <div class="bar-label">Gas</div>
@@ -483,6 +594,7 @@ def index() -> str:
 
         <article class="panel">
           <h2>Regulatory Compliance</h2>
+          <p class="panel-subtitle">Current SDS readiness view across the indexed document set.</p>
           <div class="donut-layout">
             <div class="donut" role="img" aria-label="Regulatory compliance donut chart">
               <div class="donut-center">62%<span>Compliant</span></div>
