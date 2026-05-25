@@ -3,6 +3,10 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from config import PDF_FOLDER
+from config import AIRTABLE_API_KEY
+from config import AIRTABLE_BASE_ID
+from config import AIRTABLE_TABLE_NAME
+
 from rag import answer_question, index_chunks, rag_status
 
 
@@ -11,6 +15,64 @@ app = FastAPI(title="Hazsoft SDS RAG Chatbot")
 
 class ChatRequest(BaseModel):
     question: str
+
+
+class ChatHistoryItem(BaseModel):
+    question: str
+    answer: str
+    type: str = ""  # Gas, Chemicals, etc.
+
+
+def save_to_airtable(question: str, answer: str, material_type: str = "") -> dict | None:
+    """Save chat to Airtable. Returns None if Airtable not configured."""
+    import httpx
+    
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
+        return None
+    
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "records": [{
+            "fields": {
+                "Question": question,
+                "Answer": answer,
+                "Type": material_type,
+                "Date": __import__("datetime").datetime.now().isoformat(),
+            }
+        }]
+    }
+    
+    try:
+        response = httpx.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        return response.json()
+    except Exception:
+        return None
+
+
+def get_chat_history(limit: int = 20) -> list[dict]:
+    """Get recent chat history from Airtable."""
+    import httpx
+    
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
+        return []
+    
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+    }
+    params = {"pageSize": limit, "sort": [{"field": "Date", "direction": "desc"}]}
+    
+    try:
+        response = httpx.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        return response.json().get("records", [])
+    except Exception:
+        return []
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -449,6 +511,51 @@ def index() -> str:
       backdrop-filter: blur(10px);
       margin-left: 20px;
     }
+    .agent-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      min-height: 500px;
+    }
+    .chat-container {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      min-height: 0;
+    }
+    .history-sidebar {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: var(--panel);
+      overflow-y: auto;
+    }
+    .history-sidebar h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .history-item {
+      padding: 10px;
+      border-radius: 8px;
+      background: #f8fafc;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .history-item strong {
+      color: var(--green);
+      font-weight: 600;
+    }
+    .history-item em {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
     .agent-head {
       padding: 20px;
       border-bottom: 1px solid var(--line);
@@ -759,15 +866,25 @@ button:hover {
       <div class="agent-head">
         <h2>AI Agent Dashboard</h2>
       </div>
-      <div id="chat" aria-live="polite">
-        <div class="message assistant">
-          <div class="message-text">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</div>
+      <div class="agent-layout">
+        <div class="chat-container">
+          <div id="chat" aria-live="polite">
+            <div class="message assistant">
+              <div class="message-text">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</div>
+            </div>
+          </div>
+          <form id="form">
+            <input id="question" autocomplete="off" placeholder="Ask about an SDS material..." />
+            <button id="send" type="submit">Ask</button>
+          </form>
         </div>
+        <aside class="history-sidebar">
+          <h3>Recent History</h3>
+          <div id="history-list" class="history-list">
+            <div class="history-item">Loading history...</div>
+          </div>
+        </aside>
       </div>
-      <form id="form">
-        <input id="question" autocomplete="off" placeholder="Ask about an SDS material..." />
-        <button id="send" type="submit">Ask</button>
-      </form>
     </section>
 
     <script>
@@ -776,12 +893,34 @@ button:hover {
     const input = document.querySelector("#question");
     const send = document.querySelector("#send");
     const agentPage = document.querySelector("#agent-page");
-    const navItems = document.querySelectorAll(".nav-item");
+    const historyList = document.querySelector("#history-list");
+
+    async function loadHistory() {
+      try {
+        const response = await fetch("/history");
+        const data = await response.json();
+        historyList.innerHTML = "";
+        if (data.history && data.history.length > 0) {
+          data.history.forEach(item => {
+            const fields = item.fields || {};
+            const div = document.createElement("div");
+            div.className = "history-item";
+            div.innerHTML = `<strong>${fields.Type || "General"}</strong>: ${fields.Question || ""} <em>${new Date(fields.Date).toLocaleString()}</em>`;
+            historyList.appendChild(div);
+          });
+        } else {
+          historyList.innerHTML = '<div class="history-item">No history yet</div>';
+        }
+      } catch {
+        historyList.innerHTML = '<div class="history-item">Unable to load history</div>';
+      }
+    }
 
     function showAgentPage() {
       document.querySelector("main").style.display = "none";
       agentPage.style.display = "grid";
       document.querySelector(".shell").classList.add("has-agent");
+      loadHistory();
     }
 
     function showMainPage() {
@@ -873,7 +1012,29 @@ def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Question is required.")
 
     try:
-        return answer_question(question)
+        result = answer_question(question)
+        # Save to Airtable
+        material_type = ""
+        question_lower = question.lower()
+        if "gas" in question_lower:
+            material_type = "Gas"
+        elif "chemical" in question_lower:
+            material_type = "Chemicals"
+        elif "cleaning" in question_lower:
+            material_type = "Cleaning Products"
+        elif "lab" in question_lower or "laboratory" in question_lower:
+            material_type = "Laboratory Chemicals"
+        save_to_airtable(question, result["answer"], material_type)
+        return result
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/history")
+def get_history():
+    try:
+        history = get_chat_history(20)
+        return {"history": history}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
