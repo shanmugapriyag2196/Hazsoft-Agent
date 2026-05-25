@@ -8,12 +8,7 @@ load_dotenv()
 
 
 BASE_DIR = Path(__file__).resolve().parent
-PDF_FOLDER = Path(
-    os.getenv(
-        "PDF_FOLDER",
-        r"C:\Users\priyag\Documents\Hazsoft Agent\Hazsoft Sample SDS Files",
-    )
-)
+PDF_FOLDER = Path(os.getenv("PDF_FOLDER", str(BASE_DIR / "Hazsoft Sample SDS Files")))
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
@@ -28,3 +23,4 @@ CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
 EMBEDDING_DIMENSION = 1536
 
 TOP_K = int(os.getenv("TOP_K", "5"))
+INGEST_TOKEN = os.getenv("INGEST_TOKEN", "")

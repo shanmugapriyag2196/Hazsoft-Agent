@@ -19,6 +19,7 @@ from config import (
     EMBEDDING_DIMENSION,
     EMBEDDING_MODEL,
     OPENAI_API_KEY,
+    PDF_FOLDER,
     QDRANT_API_KEY,
     QDRANT_COLLECTION,
     QDRANT_URL,
@@ -60,6 +61,32 @@ def ensure_collection(client: QdrantClient) -> None:
 def collection_exists(client: QdrantClient) -> bool:
     collections = client.get_collections().collections
     return any(collection.name == QDRANT_COLLECTION for collection in collections)
+
+
+def collection_point_count(client: QdrantClient) -> int:
+    if not collection_exists(client):
+        return 0
+    result = client.count(collection_name=QDRANT_COLLECTION, exact=True)
+    return result.count
+
+
+def rag_status() -> Dict[str, object]:
+    qdrant_client = get_qdrant_client()
+    exists = collection_exists(qdrant_client)
+    return {
+        "qdrant_url_configured": bool(QDRANT_URL),
+        "qdrant_api_key_configured": bool(QDRANT_API_KEY),
+        "openai_api_key_configured": bool(OPENAI_API_KEY),
+        "collection": QDRANT_COLLECTION,
+        "collection_exists": exists,
+        "point_count": collection_point_count(qdrant_client) if exists else 0,
+        "pdf_folder": str(PDF_FOLDER),
+        "pdf_folder_exists": PDF_FOLDER.exists(),
+        "pdf_count": len(list(PDF_FOLDER.glob("*.pdf"))) if PDF_FOLDER.exists() else 0,
+        "chunk_size": CHUNK_SIZE,
+        "chunk_overlap": CHUNK_OVERLAP,
+        "embedding_model": EMBEDDING_MODEL,
+    }
 
 
 def extract_pdf_pages(pdf_path: Path) -> Iterable[tuple[int, str]]:
@@ -153,7 +180,12 @@ def search(question: str, top_k: int = TOP_K) -> List[Dict[str, object]]:
     if not collection_exists(qdrant_client):
         raise RuntimeError(
             f"Qdrant collection '{QDRANT_COLLECTION}' does not exist yet. "
-            "Start Qdrant and run: python ingest.py"
+            "Run ingestion first: locally use python ingest.py, or on Vercel call POST /admin/ingest."
+        )
+    if collection_point_count(qdrant_client) == 0:
+        raise RuntimeError(
+            f"Qdrant collection '{QDRANT_COLLECTION}' exists but has 0 indexed chunks. "
+            "Run ingestion first: locally use python ingest.py, or on Vercel call POST /admin/ingest."
         )
 
     query_vector = embed_texts(openai_client, [question])[0]
@@ -168,7 +200,7 @@ def search(question: str, top_k: int = TOP_K) -> List[Dict[str, object]]:
         if exc.status_code == 404:
             raise RuntimeError(
                 f"Qdrant collection '{QDRANT_COLLECTION}' does not exist yet. "
-                "Start Qdrant and run: python ingest.py"
+                "Run ingestion first: locally use python ingest.py, or on Vercel call POST /admin/ingest."
             ) from exc
         raise
 

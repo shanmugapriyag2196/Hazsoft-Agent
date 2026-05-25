@@ -1,8 +1,9 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from rag import answer_question
+from config import INGEST_TOKEN, PDF_FOLDER
+from rag import answer_question, index_chunks, rag_status
 
 
 app = FastAPI(title="Hazsoft SDS RAG Chatbot")
@@ -228,5 +229,30 @@ def chat(request: ChatRequest):
 
     try:
         return answer_question(question)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/health")
+def health():
+    try:
+        return rag_status()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/admin/ingest")
+def admin_ingest(x_ingest_token: str = Header(default="")):
+    if not INGEST_TOKEN:
+        raise HTTPException(
+            status_code=403,
+            detail="INGEST_TOKEN is not configured. Add it to Vercel env variables before using this endpoint.",
+        )
+    if x_ingest_token != INGEST_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid ingestion token.")
+
+    try:
+        count = index_chunks(PDF_FOLDER)
+        return {"indexed_chunks": count, "status": rag_status()}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
