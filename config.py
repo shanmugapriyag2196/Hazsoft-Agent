@@ -18,7 +18,7 @@ PDF_FOLDER = Path(
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY") or None
-QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "hazsoft_sds")
+QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "hazsoft-agent")
 
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "75"))

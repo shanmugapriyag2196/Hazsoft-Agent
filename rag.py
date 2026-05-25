@@ -9,6 +9,7 @@ from typing import Dict, Iterable, List, Sequence
 from openai import OpenAI
 from pypdf import PdfReader
 from qdrant_client import QdrantClient
+from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.http.models import Distance, PointStruct, VectorParams
 
 from config import (
@@ -54,6 +55,11 @@ def ensure_collection(client: QdrantClient) -> None:
             distance=Distance.COSINE,
         ),
     )
+
+
+def collection_exists(client: QdrantClient) -> bool:
+    collections = client.get_collections().collections
+    return any(collection.name == QDRANT_COLLECTION for collection in collections)
 
 
 def extract_pdf_pages(pdf_path: Path) -> Iterable[tuple[int, str]]:
@@ -144,14 +150,27 @@ def index_chunks(pdf_folder: Path, batch_size: int = 64) -> int:
 def search(question: str, top_k: int = TOP_K) -> List[Dict[str, object]]:
     openai_client = get_openai_client()
     qdrant_client = get_qdrant_client()
+    if not collection_exists(qdrant_client):
+        raise RuntimeError(
+            f"Qdrant collection '{QDRANT_COLLECTION}' does not exist yet. "
+            "Start Qdrant and run: python ingest.py"
+        )
 
     query_vector = embed_texts(openai_client, [question])[0]
-    hits = qdrant_client.search(
-        collection_name=QDRANT_COLLECTION,
-        query_vector=query_vector,
-        limit=top_k,
-        with_payload=True,
-    )
+    try:
+        hits = qdrant_client.search(
+            collection_name=QDRANT_COLLECTION,
+            query_vector=query_vector,
+            limit=top_k,
+            with_payload=True,
+        )
+    except UnexpectedResponse as exc:
+        if exc.status_code == 404:
+            raise RuntimeError(
+                f"Qdrant collection '{QDRANT_COLLECTION}' does not exist yet. "
+                "Start Qdrant and run: python ingest.py"
+            ) from exc
+        raise
 
     results: List[Dict[str, object]] = []
     for hit in hits:

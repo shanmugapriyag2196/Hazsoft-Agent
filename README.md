@@ -65,3 +65,17 @@ Local RAG chatbot for the PDF files in `Hazsoft Sample SDS Files`.
 ## Ask Questions
 
 Ask about SDS details such as hazards, first aid, handling, storage, PPE, spill response, disposal, and product information. Answers include source PDF names and page numbers used for retrieval.
+
+## Troubleshooting
+
+If the chat shows that the Qdrant collection does not exist, the PDFs have not been indexed into the collection configured by `QDRANT_COLLECTION`. Make sure Qdrant is running, then run:
+
+```powershell
+python ingest.py
+```
+
+The app and ingestion script must use the same `.env` value:
+
+```text
+QDRANT_COLLECTION=hazsoft-agent
+```
