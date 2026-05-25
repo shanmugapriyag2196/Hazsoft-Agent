@@ -87,6 +87,7 @@ def index() -> str:
       line-height: 1.48;
       background: var(--panel);
       white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
     .user {
       align-self: flex-end;
@@ -95,6 +96,39 @@ def index() -> str:
     }
     .assistant {
       align-self: flex-start;
+    }
+    .message-text {
+      white-space: pre-wrap;
+    }
+    .assistant .message-text.collapsed {
+      max-height: 220px;
+      overflow: hidden;
+    }
+    .assistant .message-text.expanded {
+      max-height: 430px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    .assistant .message-text.expanded::-webkit-scrollbar {
+      width: 10px;
+    }
+    .assistant .message-text.expanded::-webkit-scrollbar-track {
+      background: #eef2f6;
+      border-radius: 8px;
+    }
+    .assistant .message-text.expanded::-webkit-scrollbar-thumb {
+      background: #98a2b3;
+      border-radius: 8px;
+      border: 2px solid #eef2f6;
+    }
+    .more-button {
+      min-height: 32px;
+      margin-top: 10px;
+      padding: 0 12px;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid #87b9b6;
+      font-weight: 700;
     }
     .sources {
       margin-top: 10px;
@@ -173,7 +207,12 @@ def index() -> str:
     function addMessage(text, role, sources) {
       const node = document.createElement("div");
       node.className = `message ${role}`;
-      node.textContent = text;
+
+      const textNode = document.createElement("div");
+      textNode.className = "message-text";
+      textNode.textContent = text;
+      node.appendChild(textNode);
+
       if (sources && sources.length) {
         const sourceNode = document.createElement("div");
         sourceNode.className = "sources";
@@ -184,6 +223,22 @@ def index() -> str:
         node.appendChild(sourceNode);
       }
       chat.appendChild(node);
+
+      if (role === "assistant" && text.length > 700) {
+        textNode.classList.add("collapsed");
+        const moreButton = document.createElement("button");
+        moreButton.type = "button";
+        moreButton.className = "more-button";
+        moreButton.textContent = "More";
+        moreButton.addEventListener("click", () => {
+          const isExpanded = textNode.classList.toggle("expanded");
+          textNode.classList.toggle("collapsed", !isExpanded);
+          moreButton.textContent = isExpanded ? "Less" : "More";
+          chat.scrollTop = chat.scrollHeight;
+        });
+        node.appendChild(moreButton);
+      }
+
       chat.scrollTop = chat.scrollHeight;
       return node;
     }
