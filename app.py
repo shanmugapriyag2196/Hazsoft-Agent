@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from config import INGEST_TOKEN, PDF_FOLDER
+from config import PDF_FOLDER
 from rag import answer_question, index_chunks, rag_status
 
 
@@ -241,18 +241,19 @@ def health():
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
-@app.post("/admin/ingest")
-def admin_ingest(x_ingest_token: str = Header(default="")):
-    if not INGEST_TOKEN:
-        raise HTTPException(
-            status_code=403,
-            detail="INGEST_TOKEN is not configured. Add it to Vercel env variables before using this endpoint.",
-        )
-    if x_ingest_token != INGEST_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid ingestion token.")
-
+def run_ingestion():
     try:
         count = index_chunks(PDF_FOLDER)
         return {"indexed_chunks": count, "status": rag_status()}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/admin/ingest")
+def admin_ingest_post():
+    return run_ingestion()
+
+
+@app.get("/admin/ingest")
+def admin_ingest_get():
+    return run_ingestion()

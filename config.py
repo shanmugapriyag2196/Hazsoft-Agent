@@ -23,4 +23,3 @@ CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
 EMBEDDING_DIMENSION = 1536
 
 TOP_K = int(os.getenv("TOP_K", "5"))
-INGEST_TOKEN = os.getenv("INGEST_TOKEN", "")

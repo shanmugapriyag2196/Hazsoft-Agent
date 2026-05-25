@@ -80,13 +80,7 @@ The app and ingestion script must use the same `.env` value:
 QDRANT_COLLECTION=hazsoft-agent
 ```
 
-For Vercel, environment variables only configure the deployed app. They do not automatically create the Qdrant collection. Add one more Vercel variable:
-
-```text
-INGEST_TOKEN=choose_a_private_random_value
-```
-
-Then redeploy and check:
+For Vercel, environment variables only configure the deployed app. They do not automatically create the Qdrant collection. Redeploy and check:
 
 ```text
 https://your-vercel-app.vercel.app/health
@@ -95,9 +89,13 @@ https://your-vercel-app.vercel.app/health
 If `collection_exists` is `false` or `point_count` is `0`, run ingestion from the deployed app:
 
 ```powershell
-Invoke-RestMethod -Method Post `
-  -Uri "https://your-vercel-app.vercel.app/admin/ingest" `
-  -Headers @{ "x-ingest-token" = "your_private_ingest_token" }
+Invoke-RestMethod -Method Post -Uri "https://your-vercel-app.vercel.app/admin/ingest"
 ```
 
 After ingestion, `/health` should show `collection_exists: true` and `point_count` greater than `0`.
+
+You can also open this URL in the browser:
+
+```text
+https://your-vercel-app.vercel.app/admin/ingest
+```
