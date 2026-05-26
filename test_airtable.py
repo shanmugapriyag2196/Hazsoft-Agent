@@ -3,15 +3,15 @@
 import httpx
 import datetime
 import urllib.parse
-from config import AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME
+from config import AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_TABLE
 
 def test_airtable():
-    print(f"AIRTABLE_API_KEY format: {'pat...' if AIRTABLE_API_KEY.startswith('pat') else 'key...' if AIRTABLE_API_KEY.startswith('key') else f'{AIRTABLE_API_KEY[:4]}... (unknown format)'}")
+    print(f"AIRTABLE_API_KEY: {'pat...' if AIRTABLE_API_KEY.startswith('pat') else 'key...' if AIRTABLE_API_KEY.startswith('key') else f'{AIRTABLE_API_KEY[:4]}... (unknown format)'}")
     print(f"AIRTABLE_BASE_ID: {AIRTABLE_BASE_ID}")
-    print(f"AIRTABLE_TABLE_NAME: {AIRTABLE_TABLE_NAME}")
+    print(f"AIRTABLE_TABLE: {AIRTABLE_TABLE}")
     
-    encoded_table_name = urllib.parse.quote(AIRTABLE_TABLE_NAME, safe='')
-    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table_name}"
+    encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     print(f"URL: {url}")
     
     headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}

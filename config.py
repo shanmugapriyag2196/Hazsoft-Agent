@@ -17,7 +17,8 @@ QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "hazsoft-agent")
 
 AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY", "")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID", "")
-AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", "Response_Data")
+AIRTABLE_TABLE_ID = os.getenv("AIRTABLE_TABLE_ID", "")
+AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", AIRTABLE_TABLE_ID or "Response_Data")
 
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "75"))

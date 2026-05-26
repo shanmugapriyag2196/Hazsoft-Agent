@@ -8,7 +8,10 @@ from typing import Optional, Dict, List
 from config import PDF_FOLDER
 from config import AIRTABLE_API_KEY
 from config import AIRTABLE_BASE_ID
+from config import AIRTABLE_TABLE_ID
 from config import AIRTABLE_TABLE_NAME
+
+AIRTABLE_TABLE = AIRTABLE_TABLE_ID or AIRTABLE_TABLE_NAME
 
 from rag import answer_question, index_chunks, rag_status
 
@@ -35,8 +38,8 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> Opt
         print("Airtable: Missing API key or base ID")
         return None
 
-    encoded_table_name = urllib.parse.quote(AIRTABLE_TABLE_NAME, safe='')
-    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table_name}"
+    encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     headers = {
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json",
@@ -75,8 +78,8 @@ def get_chat_history(limit: int = 20) -> List[Dict]:
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         return []
 
-    encoded_table_name = urllib.parse.quote(AIRTABLE_TABLE_NAME, safe='')
-    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table_name}"
+    encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     headers = {
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
     }
@@ -123,7 +126,6 @@ def determine_material_type(question: str, answer: str) -> str:
     """Determine material type based on question and answer content."""
     combined = (question + " " + answer).lower()
     
-    hazardous_keywords = ["gas", "chemical", "lab", "laboratory"]
     material_keywords = {
         "Gas": ["gas", "propane", "butane", "natural gas", "hydrogen"],
         "Chemicals": ["chemical", "solvent", "acid", "base", "reagent"],
