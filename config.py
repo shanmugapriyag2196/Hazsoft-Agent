@@ -3,11 +3,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
-load_dotenv()
-
-
 BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
+
 PDF_FOLDER = Path(os.getenv("PDF_FOLDER", str(BASE_DIR / "Hazsoft Sample SDS Files")))
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")

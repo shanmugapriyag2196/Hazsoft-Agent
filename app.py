@@ -49,7 +49,6 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> Opt
             "fields": {
                 "Question": question,
                 "Response": answer,
-                "Answer": answer,
                 "Type": material_type,
                 "Date": datetime.datetime.now().isoformat(),
             }
@@ -74,6 +73,7 @@ def get_chat_history(limit: int = 20) -> List[Dict]:
     """Get recent chat history from Airtable."""
     import httpx
     import urllib.parse
+    import json
 
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         return []
@@ -83,7 +83,11 @@ def get_chat_history(limit: int = 20) -> List[Dict]:
     headers = {
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
     }
-    params = {"pageSize": limit, "sort": [{"field": "Date", "direction": "desc"}]}
+    params = {
+        "pageSize": limit,
+        "sort[0][field]": "Date",
+        "sort[0][direction]": "desc"
+    }
 
     try:
         response = httpx.get(url, headers=headers, params=params, timeout=30.0)
@@ -117,7 +121,6 @@ def debug_airtable():
         "api_key_set": bool(AIRTABLE_API_KEY),
         "base_id": AIRTABLE_BASE_ID,
         "table_id": AIRTABLE_TABLE_ID,
-        "table_name": AIRTABLE_TABLE_NAME,
         "table_used": AIRTABLE_TABLE,
     }
     
