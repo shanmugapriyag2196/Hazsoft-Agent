@@ -52,8 +52,15 @@
   white-space: nowrap;
 }
 .documents-table .name-cell {
-  font-weight: 500;
-}
+   font-weight: 500;
+ }
+ .documents-table .name-cell a {
+   color: var(--blue);
+   text-decoration: none;
+ }
+ .documents-table .name-cell a:hover {
+   text-decoration: underline;
+ }
 .loading {
   padding: 40px;
   text-align: center;
@@ -96,15 +103,16 @@ async function loadDocuments() {
     const response = await fetch("/api/documents");
     const data = await response.json();
     tbody.innerHTML = "";
-    if (data.documents && data.documents.length > 0) {
-      data.documents.forEach(item => {
-        const fields = item.fields || {};
-        const tr = document.createElement("tr");
-        const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
-        tr.innerHTML = `<td class="date-cell">${dateStr}</td><td class="name-cell">${fields["DOXC Name"] || ""}</td>`;
-        tbody.appendChild(tr);
-      });
-    } else {
+if (data.documents && data.documents.length > 0) {
+       data.documents.forEach(item => {
+         const fields = item.fields || {};
+         const tr = document.createElement("tr");
+         const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
+         const doxcName = fields["DOXC Name"] || "";
+         tr.innerHTML = `<td class="date-cell">${dateStr}</td><td class="name-cell"><a href="/files/${encodeURIComponent(doxcName)}" target="_blank">${doxcName}</a></td>`;
+         tbody.appendChild(tr);
+       });
+     } else {
       tbody.innerHTML = '<tr><td colspan="2" class="loading">No documents found</td></tr>';
     }
   } catch {

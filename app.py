@@ -5,6 +5,9 @@ from pydantic import BaseModel
 import datetime
 from typing import Optional, Dict, List
 
+import base64
+import mimetypes
+
 from config import PDF_FOLDER
 from config import AIRTABLE_API_KEY
 from config import AIRTABLE_BASE_ID
@@ -14,6 +17,8 @@ from config import AIRTABLE_DOC_TABLE_ID
 
 AIRTABLE_TABLE = AIRTABLE_TABLE_ID or AIRTABLE_TABLE_NAME
 
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
 from rag import answer_question, index_chunks, rag_status
 
 app = FastAPI(title="Hazsoft SDS RAG Chatbot")
@@ -85,11 +90,13 @@ def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json",
     }
+    file_url = f"http://localhost:8000/files/{doxc_name}"
     payload = {
         "records": [{
             "fields": {
                 "Date": datetime.datetime.now().isoformat(),
                 "DOXC Name": doxc_name,
+                "Attachment": [{"url": file_url, "filename": doxc_name}]
             }
         }]
     }
@@ -340,6 +347,15 @@ def save_docs():
         return {"error": "PDF folder not found"}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/files/{filename:path}")
+def serve_pdf(filename: str):
+    """Serve PDF files from the PDF folder."""
+    filepath = PDF_FOLDER / filename
+    if filepath.exists() and filepath.suffix.lower() == ".pdf":
+        return FileResponse(path=str(filepath), media_type="application/pdf")
+    raise HTTPException(status_code=404, detail="File not found")
 
 
 @app.get("/admin/doc-names")
