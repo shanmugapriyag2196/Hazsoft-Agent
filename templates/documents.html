@@ -12,9 +12,12 @@
   backdrop-filter: blur(10px);
 }
 .documents-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   margin-bottom: 22px;
 }
-.documents-header h2 {
+.documents-header-content h2 {
   margin: 0 0 8px 0;
   font-size: 22px;
   font-weight: 700;
@@ -24,6 +27,27 @@
   margin: 0;
   color: var(--muted);
   font-size: 14px;
+}
+.upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--green), #047857);
+  color: white;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+.upload-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.25);
+}
+.upload-btn input {
+  display: none;
 }
 .documents-table {
   width: 100%;
@@ -52,15 +76,35 @@
   white-space: nowrap;
 }
 .documents-table .name-cell {
-   font-weight: 500;
- }
- .documents-table .name-cell a {
-   color: var(--blue);
-   text-decoration: none;
- }
- .documents-table .name-cell a:hover {
-   text-decoration: underline;
- }
+  font-weight: 500;
+  color: var(--ink);
+}
+.documents-table .name-cell a {
+  color: var(--blue);
+  text-decoration: none;
+}
+.documents-table .name-cell a:hover {
+  text-decoration: underline;
+}
+.action-cell {
+  display: flex;
+  gap: 8px;
+}
+.action-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+.action-btn:hover {
+  color: var(--blue);
+}
+.action-btn.delete:hover {
+  color: var(--red);
+}
 .loading {
   padding: 40px;
   text-align: center;
@@ -71,18 +115,26 @@
 {% block content %}
 <section class="documents-page">
   <div class="documents-header">
-    <h2>My Documents</h2>
-    <p class="documents-subtitle">Safety documents stored in Airtable database.</p>
+    <div class="documents-header-content">
+      <h2>My Documents</h2>
+      <p class="documents-subtitle">Safety documents stored in Airtable database.</p>
+    </div>
+    <button class="upload-btn" type="button" id="upload-btn">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" y2="15"></line></svg>
+      Upload New Document
+      <input type="file" id="file-input" accept=".pdf" />
+    </button>
   </div>
   <table class="documents-table">
     <thead>
       <tr>
         <th>Date</th>
         <th>Document Name</th>
+        <th style="width: 100px;">Actions</th>
       </tr>
     </thead>
     <tbody id="documents-body">
-      <tr><td colspan="2" class="loading">Loading documents...</td></tr>
+      <tr><td colspan="3" class="loading">Loading documents...</td></tr>
     </tbody>
   </table>
 </section>
@@ -97,28 +149,73 @@ document.querySelectorAll(".nav-item[data-page]").forEach(item => {
 });
 </script>
 <script>
+const fileInput = document.querySelector("#file-input");
+const uploadBtn = document.querySelector("#upload-btn");
+
+uploadBtn.addEventListener("click", () => fileInput.click());
+
+fileInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file || file.type !== "application/pdf") {
+    alert("Please select a PDF file");
+    return;
+  }
+  const formData = new FormData();
+  formData.append("file", file);
+  try {
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData
+    });
+    if (response.ok) {
+      loadDocuments();
+    } else {
+      alert("Upload failed");
+    }
+  } catch (err) {
+    alert("Upload error");
+  }
+  fileInput.value = "";
+});
+
 async function loadDocuments() {
   const tbody = document.querySelector("#documents-body");
   try {
     const response = await fetch("/api/documents");
     const data = await response.json();
     tbody.innerHTML = "";
-if (data.documents && data.documents.length > 0) {
-       data.documents.forEach(item => {
-         const fields = item.fields || {};
-         const tr = document.createElement("tr");
-         const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
-         const doxcName = fields["DOXC Name"] || "";
-         tr.innerHTML = `<td class="date-cell">${dateStr}</td><td class="name-cell"><a href="/files/${encodeURIComponent(doxcName)}" target="_blank">${doxcName}</a></td>`;
-         tbody.appendChild(tr);
-       });
-     } else {
-      tbody.innerHTML = '<tr><td colspan="2" class="loading">No documents found</td></tr>';
+    if (data.documents && data.documents.length > 0) {
+      data.documents.forEach(item => {
+        const fields = item.fields || {};
+        const tr = document.createElement("tr");
+        const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
+        const doxcName = fields["DOXC Name"] || "";
+        tr.innerHTML = `<td class="date-cell">${dateStr}</td><td class="name-cell"><a href="/files/${encodeURIComponent(doxcName)}" target="_blank">${doxcName}</a></td><td class="action-cell"><button class="action-btn download" title="Download"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg></button><button class="action-btn delete" title="Delete"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 3 21 18 21 18 6"></polyline><path d="M19 6V3a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3m14 0H5"></path></svg></button></td>`;
+        const downloadBtn = tr.querySelector(".download");
+        downloadBtn.addEventListener("click", () => {
+          window.open(`/files/${encodeURIComponent(doxcName)}`, "_blank");
+        });
+        const deleteBtn = tr.querySelector(".delete");
+        deleteBtn.addEventListener("click", async () => {
+          if (confirm("Delete this document?")) {
+            try {
+              await fetch(`/api/documents/${item.id}`, { method: "DELETE" });
+              tr.remove();
+            } catch {
+              alert("Delete failed");
+            }
+          }
+        });
+        tbody.appendChild(tr);
+      });
+    } else {
+      tbody.innerHTML = '<tr><td colspan="3" class="loading">No documents found</td></tr>';
     }
   } catch {
-    tbody.innerHTML = '<tr><td colspan="2" class="loading">Unable to load documents</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" class="loading">Unable to load documents</td></tr>';
   }
 }
+
 loadDocuments();
 </script>
 {% endblock %}

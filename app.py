@@ -1,8 +1,9 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import datetime
+import shutil
 from typing import Optional, Dict, List
 
 import base64
@@ -358,11 +359,40 @@ def serve_pdf(filename: str):
     raise HTTPException(status_code=404, detail="File not found")
 
 
-@app.get("/admin/doc-names")
-def doc_names():
-    """List all DOXC names in Airtable Doc table."""
+@app.post("/api/upload")
+async def upload_document(file: UploadFile = File(...)):
+    """Handle file upload via form data."""
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
+
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files allowed")
+
+    filepath = PDF_FOLDER / file.filename
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    save_doxc_to_airtable(file.filename)
+    return {"filename": file.filename, "status": "uploaded"}
+
+
+@app.delete("/api/documents/{record_id}")
+def delete_document(record_id: str):
+    import httpx
+    import urllib.parse
+
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
+        raise HTTPException(status_code=400, detail="Airtable not configured")
+
+    encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}/{record_id}"
+    headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+
     try:
-        names = get_doxc_names()
-        return {"doc_names": list(names)}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        response = httpx.delete(url, headers=headers, timeout=30.0)
+        response.raise_for_status()
+        return {"deleted": record_id}
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=500, detail=f"Delete failed: {e.response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
