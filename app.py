@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+import datetime
 
 from config import PDF_FOLDER
 from config import AIRTABLE_API_KEY
@@ -41,7 +42,7 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> dic
                 "Question": question,
                 "Answer": answer,
                 "Type": material_type,
-                "Date": __import__("datetime").datetime.now().isoformat(),
+                "Date": datetime.datetime.now().isoformat(),
             }
         }]
     }
