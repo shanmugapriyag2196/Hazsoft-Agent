@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import datetime
+from typing import Optional, Dict, List
 
 from config import PDF_FOLDER
 from config import AIRTABLE_API_KEY
@@ -24,7 +25,7 @@ class ChatHistoryItem(BaseModel):
     type: str = ""  # Gas, Chemicals, etc.
 
 
-def save_to_airtable(question: str, answer: str, material_type: str = "") -> dict | None:
+def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
     """Save chat to Airtable. Returns None if Airtable not configured."""
     import httpx
     
@@ -55,7 +56,7 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> dic
         return None
 
 
-def get_chat_history(limit: int = 20) -> list[dict]:
+def get_chat_history(limit: int = 20) -> List[Dict]:
     """Get recent chat history from Airtable."""
     import httpx
     
@@ -487,18 +488,108 @@ def index() -> str:
       border-radius: 50%;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
-    .agent {
-      min-width: 0;
-      border: 1px solid rgba(226, 232, 240, 0.9);
-      border-radius: 20px;
-      background: rgba(251, 252, 254, 0.96);
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      padding: 24px 20px;
-      gap: 18px;
-      box-shadow: var(--shadow-lg);
-      backdrop-filter: blur(10px);
-    }
+     .agent {
+       min-width: 0;
+       border: 1px solid rgba(226, 232, 240, 0.9);
+       border-radius: 20px;
+       background: rgba(251, 252, 254, 0.96);
+       display: grid;
+       grid-template-rows: auto 1fr auto;
+       padding: 24px 20px;
+       gap: 18px;
+       box-shadow: var(--shadow-lg);
+       backdrop-filter: blur(10px);
+     }
+     
+     /* Enhanced styling for agent dashboard */
+     .agent-layout {
+       display: grid;
+       grid-template-columns: 1fr 320px;
+       gap: 20px;
+       min-height: 500px;
+       height: 100%;
+     }
+     
+     .chat-container {
+       display: grid;
+       grid-template-rows: 1fr auto;
+       min-height: 0;
+     }
+     
+     #chat {
+       min-height: 0;
+       overflow-y: auto;
+       display: flex;
+       flex-direction: column;
+       gap: 14px;
+       padding-right: 6px;
+       padding-bottom: 20px;
+     }
+     
+     .history-sidebar {
+       border: 1px solid var(--line);
+       border-radius: 16px;
+       padding: 16px;
+       background: var(--panel);
+       overflow-y: auto;
+       height: fit-content;
+       max-height: 80vh;
+       position: sticky;
+       top: 20px;
+       align-self: start;
+     }
+     
+     .history-sidebar h3 {
+       margin: 0 0 12px;
+       font-size: 16px;
+       font-weight: 600;
+       display: flex;
+       align-items: center;
+       gap: 8px;
+     }
+     
+     .history-sidebar h3::before {
+       content: "";
+       width: 8px;
+       height: 8px;
+       border-radius: 50%;
+       background: var(--green);
+     }
+     
+     .history-list {
+       display: flex;
+       flex-direction: column;
+       gap: 10px;
+     }
+     
+     .history-item {
+       padding: 12px 16px;
+       border-radius: 10px;
+       background: #f8fafc;
+       font-size: 13px;
+       line-height: 1.5;
+       border-left: 3px solid var(--green);
+       transition: all 0.2s ease;
+     }
+     
+     .history-item:hover {
+       background: #f1f5f9;
+       transform: translateX(4px);
+       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+     }
+     
+     .history-item strong {
+       color: var(--green);
+       font-weight: 600;
+     }
+     
+     .history-item em {
+       display: block;
+       color: var(--muted);
+       font-size: 11px;
+       margin-top: 6px;
+       font-style: normal;
+     }
     .page {
       min-width: 0;
       border: 1px solid rgba(226, 232, 240, 0.9);
