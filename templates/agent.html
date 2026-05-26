@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+{% block title %}AI Agent Dashboard - Hazsoft Agent{% endblock %}
+
+{% block styles %}
+.agent-page {
+  min-width: 0;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  background: rgba(251, 252, 254, 0.96);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 24px 20px;
+  gap: 18px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+}
+.agent-header {
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+.agent-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.agent-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.agent-content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  height: 100%;
+}
+.chat-section {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 0;
+}
+.history-section {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--panel);
+  overflow-y: auto;
+  height: fit-content;
+  max-height: 70vh;
+}
+.history-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.history-section h3::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-item {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 13px;
+  line-height: 1.5;
+  border-left: 3px solid var(--green);
+  transition: all 0.2s ease;
+}
+.history-item:hover {
+  background: #f1f5f9;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.history-item strong {
+  color: var(--green);
+  font-weight: 600;
+}
+.history-item em {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 6px;
+  font-style: normal;
+}
+#chat {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 8px;
+  padding-bottom: 20px;
+}
+#chat::-webkit-scrollbar {
+  width: 10px;
+}
+#chat::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 8px;
+}
+#chat::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+}
+.message {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  line-height: 1.55;
+  background: var(--panel);
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  transition: transform 0.1s ease;
+}
+.message:hover {
+  transform: translateX(2px);
+}
+.user {
+  border-color: #9ccbc5;
+  background: linear-gradient(135deg, #e9f6f4, #d1ece6);
+}
+.assistant {
+  background: #ffffff;
+}
+.message-text {
+  white-space: pre-wrap;
+}
+.assistant .message-text.collapsed {
+  max-height: 200px;
+  overflow: hidden;
+}
+.assistant .message-text.expanded {
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 12px;
+}
+.sources {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  white-space: normal;
+}
+.more-button {
+  min-height: 36px;
+  margin-top: 12px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--green);
+  border: 1px solid #86c9b8;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+.more-button:hover {
+  background: rgba(5, 150, 105, 0.08);
+}
+form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--panel);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+button#send {
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, var(--green), #047857);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 15px;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+button#send:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.25);
+}
+button#send:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+@media (max-width: 820px) {
+  .agent-content {
+    grid-template-columns: 1fr;
+  }
+  .history-section {
+    max-height: 400px;
+    order: -1;
+  }
+  form {
+    grid-template-columns: 1fr;
+  }
+}
+{% endblock %}
+
+{% block content %}
+<section class="agent-page">
+  <div class="agent-header">
+    <h2>AI Agent Dashboard</h2>
+    <p class="agent-subtitle">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</p>
+  </div>
+  <div class="agent-content">
+    <div class="chat-section">
+      <div id="chat" aria-live="polite"></div>
+      <form id="form">
+        <input id="question" autocomplete="off" placeholder="Ask about an SDS material..." />
+        <button id="send" type="submit">Ask</button>
+      </form>
+    </div>
+    <div class="history-section">
+      <h3>RECENT HISTORY</h3>
+      <div id="history-list" class="history-list">
+        <div class="history-item">Loading history...</div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll(".nav-item").forEach((item, index) => {
+  if (index === 1) {
+    item.classList.add("active");
+  } else {
+    item.classList.remove("active");
+  }
+  item.addEventListener("click", () => {
+    document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+    item.classList.add("active");
+    const page = item.dataset.page;
+    if (page === "agent") {
+      window.location.href = "/agent";
+    } else if (page === "main") {
+      window.location.href = "/";
+    }
+  });
+});
+
+const chat = document.querySelector("#chat");
+const form = document.querySelector("#form");
+const input = document.querySelector("#question");
+const send = document.querySelector("#send");
+const historyList = document.querySelector("#history-list");
+
+async function loadHistory() {
+  try {
+    const response = await fetch("/history");
+    const data = await response.json();
+    historyList.innerHTML = "";
+    if (data.history && data.history.length > 0) {
+      data.history.forEach(item => {
+        const fields = item.fields || {};
+        const div = document.createElement("div");
+        div.className = "history-item";
+        const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
+        div.innerHTML = `<strong>${fields.Type || "General"}</strong>: ${fields.Question || ""} <em>${dateStr}</em>`;
+        historyList.appendChild(div);
+      });
+    } else {
+      historyList.innerHTML = '<div class="history-item">No history yet</div>';
+    }
+  } catch {
+    historyList.innerHTML = '<div class="history-item">Unable to load history</div>';
+  }
+}
+
+function addMessage(text, role, sources) {
+  const node = document.createElement("div");
+  node.className = `message ${role}`;
+
+  const textNode = document.createElement("div");
+  textNode.className = "message-text";
+  textNode.textContent = text;
+  node.appendChild(textNode);
+
+  if (sources && sources.length) {
+    const sourceNode = document.createElement("div");
+    sourceNode.className = "sources";
+    sourceNode.textContent = "Sources: " + sources
+      .map(item => `${item.source} p.${item.page}`)
+      .filter(Boolean)
+      .join("; ");
+    node.appendChild(sourceNode);
+  }
+
+  chat.appendChild(node);
+
+  if (role === "assistant" && text.length > 700) {
+    textNode.classList.add("collapsed");
+    const moreButton = document.createElement("button");
+    moreButton.type = "button";
+    moreButton.className = "more-button";
+    moreButton.textContent = "More";
+    moreButton.addEventListener("click", () => {
+      const isExpanded = textNode.classList.toggle("expanded");
+      textNode.classList.toggle("collapsed", !isExpanded);
+      moreButton.textContent = isExpanded ? "Less" : "More";
+      chat.scrollTop = chat.scrollHeight;
+    });
+    node.appendChild(moreButton);
+  }
+
+  chat.scrollTop = chat.scrollHeight;
+  return node;
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const question = input.value.trim();
+  if (!question) return;
+
+  addMessage(question, "user");
+  input.value = "";
+  send.disabled = true;
+  const pending = addMessage("Searching indexed SDS files...", "assistant");
+
+  try {
+    const response = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || "Request failed");
+    pending.remove();
+    addMessage(data.answer, "assistant", data.sources);
+    loadHistory();
+  } catch (error) {
+    pending.querySelector(".message-text").textContent = `Error: ${error.message}`;
+  } finally {
+    send.disabled = false;
+    input.focus();
+  }
+});
+
+loadHistory();
+</script>
+{% endblock %}
