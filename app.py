@@ -29,11 +29,14 @@ class ChatHistoryItem(BaseModel):
 def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
     """Save chat to Airtable. Returns None if Airtable not configured."""
     import httpx
+    import urllib.parse
 
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
+        print("Airtable: Missing API key or base ID")
         return None
 
-    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
+    encoded_table_name = urllib.parse.quote(AIRTABLE_TABLE_NAME, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table_name}"
     headers = {
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json",
@@ -51,9 +54,14 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> Opt
     }
 
     try:
-        response = httpx.post(url, headers=headers, json=payload)
+        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+        print(f"Airtable save success: {result}")
+        return result
+    except httpx.HTTPStatusError as e:
+        print(f"Airtable save error - Status: {e.response.status_code}, Body: {e.response.text}")
+        return None
     except Exception as e:
         print(f"Airtable save error: {e}")
         return None
@@ -62,20 +70,25 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> Opt
 def get_chat_history(limit: int = 20) -> List[Dict]:
     """Get recent chat history from Airtable."""
     import httpx
+    import urllib.parse
 
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         return []
 
-    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
+    encoded_table_name = urllib.parse.quote(AIRTABLE_TABLE_NAME, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table_name}"
     headers = {
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
     }
     params = {"pageSize": limit, "sort": [{"field": "Date", "direction": "desc"}]}
 
     try:
-        response = httpx.get(url, headers=headers, params=params)
+        response = httpx.get(url, headers=headers, params=params, timeout=30.0)
         response.raise_for_status()
         return response.json().get("records", [])
+    except httpx.HTTPStatusError as e:
+        print(f"Airtable history error - Status: {e.response.status_code}, Body: {e.response.text}")
+        return []
     except Exception as e:
         print(f"Airtable history error: {e}")
         return []
