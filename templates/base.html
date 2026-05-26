@@ -166,8 +166,8 @@
   </style>
 </head>
 <body>
-  <div class="shell">
-    <aside>
+<div class="shell{% if has_agent %} has-agent{% endif %}">
+     <aside>
       <div class="brand"><span class="brand-mark">H</span><span>Hazsoft Agent</span></div>
       <nav aria-label="SDS navigation">
         <button class="nav-item active" data-page="main" type="button">

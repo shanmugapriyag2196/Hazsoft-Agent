@@ -84,9 +84,7 @@ def get_chat_history(limit: int = 20) -> List[Dict]:
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
     }
     params = {
-        "pageSize": limit,
-        "sort[0][field]": "Date",
-        "sort[0][direction]": "desc"
+        "pageSize": limit
     }
 
     try:
@@ -108,7 +106,7 @@ def index(request: Request):
 
 @app.get("/agent", response_class=HTMLResponse)
 def agent(request: Request):
-    return templates.TemplateResponse("agent.html", {"request": request})
+    return templates.TemplateResponse("agent.html", {"request": request, "has_agent": True})
 
 
 @app.get("/debug/airtable")
@@ -183,6 +181,28 @@ def get_history():
         return {"history": history}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.delete("/history/{record_id}")
+def delete_history(record_id: str):
+    import httpx
+    import urllib.parse
+    
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
+        raise HTTPException(status_code=400, detail="Airtable not configured")
+    
+    encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}/{record_id}"
+    headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+    
+    try:
+        response = httpx.delete(url, headers=headers, timeout=30.0)
+        response.raise_for_status()
+        return {"deleted": record_id}
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=500, detail=f"Delete failed: {e.response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/health")

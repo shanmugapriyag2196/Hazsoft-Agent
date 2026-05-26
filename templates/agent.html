@@ -33,24 +33,29 @@
   line-height: 1.5;
 }
 .agent-content {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 20px;
-  height: 100%;
+   display: flex;
+   flex-direction: column;
+   height: 100%;
 }
 .chat-section {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  min-height: 0;
+   display: grid;
+   grid-template-rows: 1fr auto;
+   min-height: 0;
+   flex: 1;
 }
 .history-section {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 16px;
-  background: var(--panel);
-  overflow-y: auto;
-  height: fit-content;
-  max-height: 70vh;
+   border: 1px solid var(--line);
+   border-radius: 16px;
+   padding: 16px;
+   background: var(--panel);
+   overflow-y: auto;
+   height: fit-content;
+   max-height: calc(100vh - 120px);
+}
+.history-sidebar {
+   background: transparent;
+   padding: 0 0 0 20px;
+   min-width: 320px;
 }
 .history-section h3 {
   margin: 0 0 12px 0;
@@ -81,6 +86,8 @@
   line-height: 1.5;
   border-left: 3px solid var(--green);
   transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
 }
 .history-item:hover {
   background: #f1f5f9;
@@ -97,6 +104,26 @@
   font-size: 11px;
   margin-top: 6px;
   font-style: normal;
+}
+.history-item .delete-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.history-item:hover .delete-btn {
+  opacity: 1;
+}
+.history-item .delete-btn:hover {
+  color: var(--red);
 }
 #chat {
   min-height: 0;
@@ -220,17 +247,13 @@ button#send:disabled {
   transform: none;
 }
 @media (max-width: 820px) {
-  .agent-content {
-    grid-template-columns: 1fr;
-  }
-  .history-section {
-    max-height: 400px;
-    order: -1;
-  }
-  form {
-    grid-template-columns: 1fr;
-  }
-}
+   .history-sidebar {
+     display: none;
+   }
+   form {
+     grid-template-columns: 1fr;
+   }
+ }
 {% endblock %}
 
 {% block content %}
@@ -247,14 +270,19 @@ button#send:disabled {
         <button id="send" type="submit">Ask</button>
       </form>
     </div>
-    <div class="history-section">
-      <h3>RECENT HISTORY</h3>
-      <div id="history-list" class="history-list">
-        <div class="history-item">Loading history...</div>
-      </div>
-    </div>
   </div>
 </section>
+{% endblock %}
+
+{% block agent_sidebar %}
+<aside class="history-sidebar">
+  <div class="history-section">
+    <h3>RECENT HISTORY</h3>
+    <div id="history-list" class="history-list">
+      <div class="history-item">Loading history...</div>
+    </div>
+  </div>
+</aside>
 {% endblock %}
 
 {% block scripts %}
@@ -283,6 +311,12 @@ const input = document.querySelector("#question");
 const send = document.querySelector("#send");
 const historyList = document.querySelector("#history-list");
 
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 async function loadHistory() {
   try {
     const response = await fetch("/history");
@@ -293,8 +327,31 @@ async function loadHistory() {
         const fields = item.fields || {};
         const div = document.createElement("div");
         div.className = "history-item";
+        div.dataset.recordId = item.id;
+        div.dataset.question = escapeHtml(fields.Question || "");
+        div.dataset.response = escapeHtml(fields.Response || "");
+        div.dataset.type = escapeHtml(fields.Type || "General");
         const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
-        div.innerHTML = `<strong>${fields.Type || "General"}</strong>: ${fields.Question || ""} <em>${dateStr}</em>`;
+        div.innerHTML = `<strong>${escapeHtml(fields.Type || "General")}</strong>: ${escapeHtml(fields.Question || "")} <em>${dateStr}</em> <button class="delete-btn" title="Delete">×</button>`;
+        
+        div.addEventListener("click", (e) => {
+          if (e.target.classList.contains("delete-btn")) return;
+          addMessage(div.dataset.question, "user");
+          addMessage(div.dataset.response, "assistant");
+        });
+
+        div.querySelector(".delete-btn").addEventListener("click", async (e) => {
+          e.stopPropagation();
+          if (confirm("Delete this conversation?")) {
+            try {
+              await fetch(`/history/${div.dataset.recordId}`, { method: "DELETE" });
+              div.remove();
+            } catch (err) {
+              alert("Failed to delete");
+            }
+          }
+        });
+        
         historyList.appendChild(div);
       });
     } else {
