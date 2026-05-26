@@ -42,6 +42,7 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> Opt
         "records": [{
             "fields": {
                 "Question": question,
+                "Response": answer,
                 "Answer": answer,
                 "Type": material_type,
                 "Date": datetime.datetime.now().isoformat(),
@@ -98,20 +99,34 @@ def chat(request: ChatRequest):
 
     try:
         result = answer_question(question)
-        material_type = ""
-        question_lower = question.lower()
-        if "gas" in question_lower:
-            material_type = "Gas"
-        elif "chemical" in question_lower:
-            material_type = "Chemicals"
-        elif "cleaning" in question_lower:
-            material_type = "Cleaning Products"
-        elif "lab" in question_lower or "laboratory" in question_lower:
-            material_type = "Laboratory Chemicals"
+        material_type = determine_material_type(question, result.get("answer", ""))
         save_to_airtable(question, result["answer"], material_type)
         return result
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+def determine_material_type(question: str, answer: str) -> str:
+    """Determine material type based on question and answer content."""
+    combined = (question + " " + answer).lower()
+    
+    hazardous_keywords = ["gas", "chemical", "lab", "laboratory"]
+    material_keywords = {
+        "Gas": ["gas", "propane", "butane", "natural gas", "hydrogen"],
+        "Chemicals": ["chemical", "solvent", "acid", "base", "reagent"],
+        "Cleaning Products": ["cleaning", "detergent", "soap", "disinfectant"],
+        "Laboratory Chemicals": ["lab", "laboratory", "lab chemical"]
+    }
+    
+    for material, keywords in material_keywords.items():
+        if any(kw in combined for kw in keywords):
+            for kw in ["hazard", "danger", "warning", "dangerous", "toxic", "flammable", 
+                      "corrosive", "explosive", "reactivity", "health hazard"]:
+                if kw in combined:
+                    return f"Hazardous - {material}"
+            return f"Non-Hazardous - {material}"
+    
+    return "Others"
 
 
 @app.get("/history")
