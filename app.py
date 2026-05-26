@@ -130,6 +130,27 @@ def get_doxc_names() -> set:
         return set()
 
 
+def get_doxc_records() -> List[Dict]:
+    """Get all DOXC records from Doc table."""
+    import httpx
+    import urllib.parse
+
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
+        return []
+
+    encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+    headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+
+    try:
+        response = httpx.get(url, headers=headers, params={"pageSize": 100}, timeout=30.0)
+        response.raise_for_status()
+        return response.json().get("records", [])
+    except Exception as e:
+        print(f"Failed to fetch DOXC records: {e}")
+        return []
+
+
 def get_chat_history(limit: int = 20) -> List[Dict]:
     """Get recent chat history from Airtable."""
     import httpx
@@ -167,6 +188,20 @@ def index(request: Request):
 @app.get("/agent", response_class=HTMLResponse)
 def agent(request: Request):
     return templates.TemplateResponse("agent.html", {"request": request, "has_agent": True})
+
+
+@app.get("/documents", response_class=HTMLResponse)
+def documents(request: Request):
+    return templates.TemplateResponse("documents.html", {"request": request})
+
+
+@app.get("/api/documents")
+def api_documents():
+    try:
+        records = get_doxc_records()
+        return {"documents": records}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.get("/debug/airtable")

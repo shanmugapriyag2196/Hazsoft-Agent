@@ -370,22 +370,10 @@ h1 {
 
 {% block scripts %}
 <script>
-document.querySelectorAll(".nav-item").forEach((item, index) => {
-  if (index === 0) {
+document.querySelectorAll(".nav-item[data-page]").forEach(item => {
+  if (item.dataset.page === "main" || !item.dataset.page) {
     item.classList.add("active");
-  } else {
-    item.classList.remove("active");
   }
-  item.addEventListener("click", () => {
-    document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
-    item.classList.add("active");
-    const page = item.dataset.page;
-    if (page === "agent") {
-      window.location.href = "/agent";
-    } else if (page === "main") {
-      window.location.href = "/";
-    }
-  });
 });
 </script>
 {% endblock %}

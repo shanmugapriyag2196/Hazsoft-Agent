@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}My Documents - Hazsoft Agent{% endblock %}
+
+{% block styles %}
+.documents-page {
+  min-width: 0;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  background: rgba(251, 252, 254, 0.96);
+  padding: 24px 28px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+}
+.documents-header {
+  margin-bottom: 22px;
+}
+.documents-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.documents-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.documents-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.documents-table th {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--line);
+  color: var(--ink);
+  font-weight: 600;
+  background: #f8fafc;
+}
+.documents-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+.documents-table tr:hover {
+  background: #f1f5f9;
+}
+.documents-table .date-cell {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.documents-table .name-cell {
+  font-weight: 500;
+}
+.loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+}
+{% endblock %}
+
+{% block content %}
+<section class="documents-page">
+  <div class="documents-header">
+    <h2>My Documents</h2>
+    <p class="documents-subtitle">Safety documents stored in Airtable database.</p>
+  </div>
+  <table class="documents-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Document Name</th>
+      </tr>
+    </thead>
+    <tbody id="documents-body">
+      <tr><td colspan="2" class="loading">Loading documents...</td></tr>
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll(".nav-item[data-page]").forEach(item => {
+  if (item.dataset.page === "documents") {
+    item.classList.add("active");
+  }
+});
+</script>
+<script>
+async function loadDocuments() {
+  const tbody = document.querySelector("#documents-body");
+  try {
+    const response = await fetch("/api/documents");
+    const data = await response.json();
+    tbody.innerHTML = "";
+    if (data.documents && data.documents.length > 0) {
+      data.documents.forEach(item => {
+        const fields = item.fields || {};
+        const tr = document.createElement("tr");
+        const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
+        tr.innerHTML = `<td class="date-cell">${dateStr}</td><td class="name-cell">${fields["DOXC Name"] || ""}</td>`;
+        tbody.appendChild(tr);
+      });
+    } else {
+      tbody.innerHTML = '<tr><td colspan="2" class="loading">No documents found</td></tr>';
+    }
+  } catch {
+    tbody.innerHTML = '<tr><td colspan="2" class="loading">Unable to load documents</td></tr>';
+  }
+}
+loadDocuments();
+</script>
+{% endblock %}

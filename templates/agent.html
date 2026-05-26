@@ -291,24 +291,13 @@ button#send:disabled {
 
 {% block scripts %}
 <script>
-document.querySelectorAll(".nav-item").forEach((item, index) => {
-  if (index === 1) {
+document.querySelectorAll(".nav-item[data-page]").forEach(item => {
+  if (item.dataset.page === "agent") {
     item.classList.add("active");
-  } else {
-    item.classList.remove("active");
   }
-  item.addEventListener("click", () => {
-    document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
-    item.classList.add("active");
-    const page = item.dataset.page;
-    if (page === "agent") {
-      window.location.href = "/agent";
-    } else if (page === "main") {
-      window.location.href = "/";
-    }
-  });
 });
-
+</script>
+<script>
 const chat = document.querySelector("#chat");
 const form = document.querySelector("#form");
 const input = document.querySelector("#question");
