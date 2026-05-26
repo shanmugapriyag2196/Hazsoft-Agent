@@ -10,6 +10,7 @@ from config import AIRTABLE_API_KEY
 from config import AIRTABLE_BASE_ID
 from config import AIRTABLE_TABLE_ID
 from config import AIRTABLE_TABLE_NAME
+from config import AIRTABLE_DOC_TABLE_ID
 
 AIRTABLE_TABLE = AIRTABLE_TABLE_ID or AIRTABLE_TABLE_NAME
 
@@ -66,6 +67,44 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> Opt
         return None
     except Exception as e:
         print(f"Airtable save error: {e}")
+        return None
+
+
+def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
+    """Save SDS file name to Doc Airtable table."""
+    import httpx
+    import urllib.parse
+
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
+        print("Airtable Doc: Missing configuration")
+        return None
+
+    encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "records": [{
+            "fields": {
+                "Date": datetime.datetime.now().isoformat(),
+                "DOXC Name": doxc_name,
+            }
+        }]
+    }
+
+    try:
+        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
+        response.raise_for_status()
+        result = response.json()
+        print(f"Airtable Doc save success: {result}")
+        return result
+    except httpx.HTTPStatusError as e:
+        print(f"Airtable Doc save error - Status: {e.response.status_code}, Body: {e.response.text}")
+        return None
+    except Exception as e:
+        print(f"Airtable Doc save error: {e}")
         return None
 
 
@@ -215,8 +254,11 @@ def health():
 
 def run_ingestion():
     try:
-        count = index_chunks(PDF_FOLDER)
-        return {"indexed_chunks": count, "status": rag_status()}
+        chunks = index_chunks(PDF_FOLDER)
+        if PDF_FOLDER.exists():
+            for pdf_path in PDF_FOLDER.glob("*.pdf"):
+                save_doxc_to_airtable(pdf_path.name)
+        return {"indexed_chunks": chunks, "status": rag_status()}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
