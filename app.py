@@ -108,11 +108,32 @@ def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
         return None
 
 
+def get_doxc_names() -> set:
+    """Get existing DOXC names from Doc table."""
+    import httpx
+    import urllib.parse
+
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
+        return set()
+
+    encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+    headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+
+    try:
+        response = httpx.get(url, headers=headers, params={"pageSize": 100}, timeout=30.0)
+        response.raise_for_status()
+        records = response.json().get("records", [])
+        return {r.get("fields", {}).get("DOXC Name") for r in records if r.get("fields", {}).get("DOXC Name")}
+    except Exception as e:
+        print(f"Failed to fetch DOXC names: {e}")
+        return set()
+
+
 def get_chat_history(limit: int = 20) -> List[Dict]:
     """Get recent chat history from Airtable."""
     import httpx
     import urllib.parse
-    import json
 
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         return []
@@ -153,26 +174,25 @@ def debug_airtable():
     """Debug endpoint to check Airtable configuration."""
     import httpx
     import urllib.parse
-    
+
     status = {
         "api_key_set": bool(AIRTABLE_API_KEY),
         "base_id": AIRTABLE_BASE_ID,
         "table_id": AIRTABLE_TABLE_ID,
+        "doc_table_id": AIRTABLE_DOC_TABLE_ID,
         "table_used": AIRTABLE_TABLE,
     }
-    
-    if AIRTABLE_API_KEY and AIRTABLE_BASE_ID:
-        encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
+
+    if AIRTABLE_API_KEY and AIRTABLE_BASE_ID and AIRTABLE_DOC_TABLE_ID:
+        encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
         url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
         headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
-        
         try:
             response = httpx.get(url, headers=headers, params={"pageSize": 1}, timeout=10.0)
-            status["test_status"] = response.status_code
-            status["test_result"] = response.json() if response.status_code == 200 else response.text
+            status["doc_test_status"] = response.status_code
         except Exception as e:
-            status["test_error"] = str(e)
-    
+            status["doc_test_error"] = str(e)
+
     return status
 
 
@@ -194,22 +214,22 @@ def chat(request: ChatRequest):
 def determine_material_type(question: str, answer: str) -> str:
     """Determine material type based on question and answer content."""
     combined = (question + " " + answer).lower()
-    
+
     material_keywords = {
         "Gas": ["gas", "propane", "butane", "natural gas", "hydrogen"],
         "Chemicals": ["chemical", "solvent", "acid", "base", "reagent"],
         "Cleaning Products": ["cleaning", "detergent", "soap", "disinfectant"],
         "Laboratory Chemicals": ["lab", "laboratory", "lab chemical"]
     }
-    
+
     for material, keywords in material_keywords.items():
         if any(kw in combined for kw in keywords):
-            for kw in ["hazard", "danger", "warning", "dangerous", "toxic", "flammable", 
+            for kw in ["hazard", "danger", "warning", "dangerous", "toxic", "flammable",
                       "corrosive", "explosive", "reactivity", "health hazard"]:
                 if kw in combined:
                     return f"Hazardous - {material}"
             return f"Non-Hazardous - {material}"
-    
+
     return "Others"
 
 
@@ -226,14 +246,14 @@ def get_history():
 def delete_history(record_id: str):
     import httpx
     import urllib.parse
-    
+
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         raise HTTPException(status_code=400, detail="Airtable not configured")
-    
+
     encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}/{record_id}"
     headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
-    
+
     try:
         response = httpx.delete(url, headers=headers, timeout=30.0)
         response.raise_for_status()
@@ -255,9 +275,6 @@ def health():
 def run_ingestion():
     try:
         chunks = index_chunks(PDF_FOLDER)
-        if PDF_FOLDER.exists():
-            for pdf_path in PDF_FOLDER.glob("*.pdf"):
-                save_doxc_to_airtable(pdf_path.name)
         return {"indexed_chunks": chunks, "status": rag_status()}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -271,3 +288,30 @@ def admin_ingest_post():
 @app.get("/admin/ingest")
 def admin_ingest_get():
     return run_ingestion()
+
+
+@app.post("/admin/save-docs")
+def save_docs():
+    """Save new PDF files to Airtable Doc table."""
+    try:
+        if PDF_FOLDER.exists():
+            existing = get_doxc_names()
+            saved = []
+            for pdf_path in PDF_FOLDER.glob("*.pdf"):
+                if pdf_path.name not in existing:
+                    save_doxc_to_airtable(pdf_path.name)
+                    saved.append(pdf_path.name)
+            return {"saved_files": saved, "count": len(saved)}
+        return {"error": "PDF folder not found"}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/admin/doc-names")
+def doc_names():
+    """List all DOXC names in Airtable Doc table."""
+    try:
+        names = get_doxc_names()
+        return {"doc_names": list(names)}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
