@@ -501,19 +501,46 @@ def index() -> str:
        backdrop-filter: blur(10px);
      }
      
-     /* Enhanced styling for agent dashboard */
-     .agent-layout {
+     /* AI Agent Dashboard Specific Styles */
+     .agent-container {
        display: grid;
        grid-template-columns: 1fr 320px;
        gap: 20px;
-       min-height: 500px;
        height: 100%;
      }
      
-     .chat-container {
+     .agent-header {
+       text-align: center;
+       padding-bottom: 20px;
+       border-bottom: 1px solid var(--line);
+       margin-bottom: 20px;
+     }
+     
+     .agent-header h2 {
+       margin: 0 0 8px 0;
+       font-size: 22px;
+       font-weight: 700;
+       color: var(--ink);
+     }
+     
+     .agent-subtitle {
+       margin: 0;
+       color: var(--muted);
+       font-size: 14px;
+       line-height: 1.5;
+     }
+     
+     .agent-content {
        display: grid;
        grid-template-rows: 1fr auto;
-       min-height: 0;
+       height: 100%;
+     }
+     
+     .chat-wrapper {
+       display: flex;
+       flex-direction: column;
+       gap: 16px;
+       margin-bottom: 20px;
      }
      
      #chat {
@@ -522,11 +549,11 @@ def index() -> str:
        display: flex;
        flex-direction: column;
        gap: 14px;
-       padding-right: 6px;
+       padding-right: 8px;
        padding-bottom: 20px;
      }
      
-     .history-sidebar {
+     .history-wrapper {
        border: 1px solid var(--line);
        border-radius: 16px;
        padding: 16px;
@@ -534,21 +561,19 @@ def index() -> str:
        overflow-y: auto;
        height: fit-content;
        max-height: 80vh;
-       position: sticky;
-       top: 20px;
-       align-self: start;
      }
      
-     .history-sidebar h3 {
-       margin: 0 0 12px;
+     .history-wrapper h3 {
+       margin: 0 0 12px 0;
        font-size: 16px;
        font-weight: 600;
+       color: var(--ink);
        display: flex;
        align-items: center;
        gap: 8px;
      }
      
-     .history-sidebar h3::before {
+     .history-wrapper h3::before {
        content: "";
        width: 8px;
        height: 8px;
@@ -950,30 +975,29 @@ button:hover {
       </section>
     </main>
 
-    <section class="page" id="agent-page" style="display: none;">
-      <div class="agent-head">
-        <h2>AI Agent Dashboard</h2>
-      </div>
-      <div class="agent-layout">
-        <div class="chat-container">
-          <div id="chat" aria-live="polite">
-            <div class="message assistant">
-              <div class="message-text">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</div>
-            </div>
-          </div>
-          <form id="form">
-            <input id="question" autocomplete="off" placeholder="Ask about an SDS material..." />
-            <button id="send" type="submit">Ask</button>
-          </form>
-        </div>
-        <aside class="history-sidebar">
-          <h3>Recent History</h3>
-          <div id="history-list" class="history-list">
-            <div class="history-item">Loading history...</div>
-          </div>
-        </aside>
-      </div>
-    </section>
+     <section class="page" id="agent-page" style="display: none;">
+       <div class="agent-container">
+         <div class="agent-header">
+           <h2>AI Agent Dashboard</h2>
+           <p class="agent-subtitle">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</p>
+         </div>
+         <div class="agent-content">
+           <div class="chat-wrapper">
+             <div id="chat" aria-live="polite"></div>
+             <form id="form">
+               <input id="question" autocomplete="off" placeholder="Ask about an SDS material..." />
+               <button id="send" type="submit">Ask</button>
+             </form>
+           </div>
+           <div class="history-wrapper">
+             <h3>RECENT HISTORY</h3>
+             <div id="history-list" class="history-list">
+               <div class="history-item">Loading history...</div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </section>
 
     <script>
     const chat = document.querySelector("#chat");
