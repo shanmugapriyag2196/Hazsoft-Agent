@@ -107,6 +107,35 @@ def agent(request: Request):
     return templates.TemplateResponse("agent.html", {"request": request})
 
 
+@app.get("/debug/airtable")
+def debug_airtable():
+    """Debug endpoint to check Airtable configuration."""
+    import httpx
+    import urllib.parse
+    
+    status = {
+        "api_key_set": bool(AIRTABLE_API_KEY),
+        "base_id": AIRTABLE_BASE_ID,
+        "table_id": AIRTABLE_TABLE_ID,
+        "table_name": AIRTABLE_TABLE_NAME,
+        "table_used": AIRTABLE_TABLE,
+    }
+    
+    if AIRTABLE_API_KEY and AIRTABLE_BASE_ID:
+        encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+        headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+        
+        try:
+            response = httpx.get(url, headers=headers, params={"pageSize": 1}, timeout=10.0)
+            status["test_status"] = response.status_code
+            status["test_result"] = response.json() if response.status_code == 200 else response.text
+        except Exception as e:
+            status["test_error"] = str(e)
+    
+    return status
+
+
 @app.post("/chat")
 def chat(request: ChatRequest):
     question = request.question.strip()
