@@ -22,7 +22,6 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import datetime
 import shutil
-import base64
 import httpx
 import urllib.parse
 from typing import Optional, Dict, List
@@ -127,20 +126,7 @@ def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
         print(f"Airtable Doc save error: {e}")
         return None
 
-def get_doxc_names() -> set:
-    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
-        return set()
-    encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
-    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
-    headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
-    try:
-        response = httpx.get(url, headers=headers, params={"pageSize": 100}, timeout=30.0)
-        response.raise_for_status()
-        records = response.json().get("records", [])
-        return {r.get("fields", {}).get("DOXC Name") for r in records if r.get("fields", {}).get("DOXC Name")}
-    except Exception as e:
-        print(f"Failed to fetch DOXC names: {e}")
-        return set()
+
 
 def get_doxc_records() -> List[Dict]:
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
@@ -155,6 +141,15 @@ def get_doxc_records() -> List[Dict]:
     except Exception as e:
         print(f"Failed to fetch DOXC records: {e}")
         return []
+
+def get_all_airtable_doxc_names() -> set:
+    records = get_doxc_records()
+    names = set()
+    for r in records:
+        name = r.get("fields", {}).get("DOXC Name")
+        if name:
+            names.add(name)
+    return names
 
 def get_chat_history(limit: int = 20) -> List[Dict]:
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
@@ -291,7 +286,7 @@ def admin_ingest_get():
 def save_docs():
     try:
         if PDF_FOLDER.exists():
-            existing = get_doxc_names()
+            existing = get_all_airtable_doxc_names()
             saved = []
             for pdf_path in PDF_FOLDER.glob("*.pdf"):
                 if pdf_path.name not in existing:
@@ -301,13 +296,6 @@ def save_docs():
         return {"error": "PDF folder not found"}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-
-@app.get("/files/{filename:path}")
-def serve_pdf(filename: str):
-    filepath = PDF_FOLDER / filename
-    if filepath.exists() and filepath.suffix.lower() == ".pdf":
-        return FileResponse(path=str(filepath), media_type="application/pdf")
-    raise HTTPException(status_code=404, detail="File not found")
 
 @app.post("/api/upload")
 async def upload_document(file: UploadFile = File(...)):
@@ -322,6 +310,13 @@ async def upload_document(file: UploadFile = File(...)):
     save_doxc_to_airtable(file.filename)
     return {"filename": file.filename, "status": "uploaded"}
 
+@app.get("/files/{filename:path}")
+def serve_pdf(filename: str):
+    filepath = PDF_FOLDER / filename
+    if filepath.exists() and filepath.suffix.lower() == ".pdf":
+        return FileResponse(path=str(filepath), media_type="application/pdf")
+    raise HTTPException(status_code=404, detail="File not found")
+
 @app.delete("/api/documents/{record_id}")
 def delete_document(record_id: str):
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
@@ -330,8 +325,16 @@ def delete_document(record_id: str):
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}/{record_id}"
     headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
     try:
-        response = httpx.delete(url, headers=headers, timeout=30.0)
-        response.raise_for_status()
+        response = httpx.get(url, headers=headers, timeout=30.0)
+        if response.status_code == 200:
+            record = response.json()
+            doxc_name = record.get("fields", {}).get("DOXC Name")
+            if doxc_name and not VERCEL:
+                filepath = PDF_FOLDER / doxc_name
+                if filepath.exists():
+                    filepath.unlink()
+        del_response = httpx.delete(url, headers=headers, timeout=30.0)
+        del_response.raise_for_status()
         return {"deleted": record_id}
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=500, detail=f"Delete failed: {e.response.text}")
