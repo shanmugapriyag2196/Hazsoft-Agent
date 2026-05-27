@@ -147,13 +147,9 @@ document.querySelectorAll(".nav-item[data-page]").forEach(item => {
     item.classList.add("active");
   }
 });
-</script>
-<script>
 const fileInput = document.querySelector("#file-input");
 const uploadBtn = document.querySelector("#upload-btn");
-
 uploadBtn.addEventListener("click", () => fileInput.click());
-
 fileInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file || file.type !== "application/pdf") {
@@ -170,14 +166,14 @@ fileInput.addEventListener("change", async (e) => {
     if (response.ok) {
       loadDocuments();
     } else {
-      alert("Upload failed");
+      const data = await response.json();
+      alert("Upload failed: " + (data.detail || "Unknown error"));
     }
   } catch (err) {
     alert("Upload error");
   }
   fileInput.value = "";
 });
-
 async function loadDocuments() {
   const tbody = document.querySelector("#documents-body");
   try {
@@ -190,16 +186,18 @@ async function loadDocuments() {
         const tr = document.createElement("tr");
         const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
         const doxcName = fields["DOXC Name"] || "";
-        tr.innerHTML = `<td class="date-cell">${dateStr}</td><td class="name-cell"><a href="/files/${encodeURIComponent(doxcName)}" target="_blank">${doxcName}</a></td><td class="action-cell"><button class="action-btn download" title="Download"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg></button><button class="action-btn delete" title="Delete"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 3 21 18 21 18 6"></polyline><path d="M19 6V3a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3m14 0H5"></path></svg></button></td>`;
+        const attachment = fields.Attachment && fields.Attachment[0];
+        const fileUrl = attachment ? attachment.url : "/files/" + encodeURIComponent(doxcName);
+        tr.innerHTML = `<td class="date-cell">${dateStr}</td><td class="name-cell"><a href="${fileUrl}" target="_blank">${doxcName}</a></td><td class="action-cell"><button class="action-btn download" title="Download"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg></button><button class="action-btn delete" title="Delete"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 3 21 6 21 6 6"></polyline><path d="M5 6V3a2 2 0 0 1 2-2h6l2 2h6a2 2 0 0 1 2 2v3"></path></svg></button></td>`;
         const downloadBtn = tr.querySelector(".download");
         downloadBtn.addEventListener("click", () => {
-          window.open(`/files/${encodeURIComponent(doxcName)}`, "_blank");
+          window.open(fileUrl, "_blank");
         });
         const deleteBtn = tr.querySelector(".delete");
         deleteBtn.addEventListener("click", async () => {
           if (confirm("Delete this document?")) {
             try {
-              await fetch(`/api/documents/${item.id}`, { method: "DELETE" });
+              await fetch("/api/documents/" + item.id, { method: "DELETE" });
               tr.remove();
             } catch {
               alert("Delete failed");
@@ -215,7 +213,6 @@ async function loadDocuments() {
     tbody.innerHTML = '<tr><td colspan="3" class="loading">Unable to load documents</td></tr>';
   }
 }
-
 loadDocuments();
 </script>
 {% endblock %}
