@@ -112,12 +112,11 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
     filepath = PDF_FOLDER / file.filename
     content = await file.read()
-    # Try to save file, continue on failure (Vercel read-only)
     try:
         with open(filepath, "wb") as f:
             f.write(content)
     except Exception:
-        pass
+        raise HTTPException(status_code=500, detail="Could not save file")
     result = save_doxc_to_airtable(file.filename)
     if not result:
         raise HTTPException(status_code=500, detail="Airtable save failed")
