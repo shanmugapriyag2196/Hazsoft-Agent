@@ -340,3 +340,34 @@ def delete_document(record_id: str):
         raise HTTPException(status_code=500, detail=f"Delete failed: {e.response.text}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/admin/download-from-airtable")
+def download_from_airtable():
+    """Download Airtable attachments to local PDF_FOLDER (local only)."""
+    if VERCEL:
+        raise HTTPException(status_code=400, detail="Not available on Vercel")
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
+        raise HTTPException(status_code=400, detail="Airtable not configured")
+    
+    PDF_FOLDER.mkdir(parents=True, exist_ok=True)
+    downloaded = []
+    failed = []
+    
+    records = get_doxc_records()
+    for rec in records:
+        fields = rec.get("fields", {})
+        name = fields.get("DOXC Name")
+        attachment = fields.get("Attachment")
+        
+        if name and attachment:
+            attach_url = attachment[0].get("url") if isinstance(attachment, list) else attachment.get("url")
+            if attach_url and not (PDF_FOLDER / name).exists():
+                try:
+                    resp = httpx.get(attach_url, timeout=60.0)
+                    resp.raise_for_status()
+                    (PDF_FOLDER / name).write_bytes(resp.content)
+                    downloaded.append(name)
+                except Exception as e:
+                    failed.append({"name": name, "error": str(e)})
+    
+    return {"downloaded": downloaded, "count": len(downloaded), "failed": failed}
