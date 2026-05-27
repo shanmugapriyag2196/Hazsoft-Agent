@@ -2,11 +2,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path, override=True)
 
-# Set defaults for missing env vars
 os.environ.setdefault("OPENAI_API_KEY", "")
 os.environ.setdefault("QDRANT_URL", "")
 os.environ.setdefault("QDRANT_API_KEY", "")
@@ -14,13 +12,11 @@ os.environ.setdefault("AIRTABLE_API_KEY", "")
 os.environ.setdefault("AIRTABLE_BASE_ID", "")
 os.environ.setdefault("AIRTABLE_DOC_TABLE_ID", "")
 
-# Import after env is loaded
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import datetime
-import shutil
 from typing import Optional, Dict, List
 from starlette.responses import FileResponse
 
@@ -33,7 +29,6 @@ from config import AIRTABLE_DOC_TABLE_ID
 
 AIRTABLE_TABLE = AIRTABLE_TABLE_ID or AIRTABLE_TABLE_NAME
 
-# Lazy import for rag (may fail if Qdrant unavailable)
 try:
     from rag import answer_question, index_chunks, rag_status
 except Exception:
@@ -110,16 +105,20 @@ def api_documents():
 async def upload_document(file: UploadFile = File(...)):
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
-    filepath = PDF_FOLDER / file.filename
-    content = await file.read()
+    
+    # Try to save file locally (works for local server, ignored on Vercel)
     try:
+        PDF_FOLDER.mkdir(parents=True, exist_ok=True)
+        filepath = PDF_FOLDER / file.filename
+        content = await file.read()
         with open(filepath, "wb") as f:
             f.write(content)
     except Exception:
-        raise HTTPException(status_code=500, detail="Could not save file")
+        pass  # Continue without file storage on read-only systems
+    
     result = save_doxc_to_airtable(file.filename)
     if not result:
-        raise HTTPException(status_code=500, detail="Airtable save failed")
+        raise HTTPException(status_code=500, detail="Airtable save failed - check API key and table ID")
     return {"filename": file.filename, "status": "uploaded"}
 
 @app.delete("/api/documents/{record_id}")
@@ -142,4 +141,4 @@ def serve_pdf(filename: str):
     filepath = PDF_FOLDER / filename
     if filepath.exists() and filepath.suffix.lower() == ".pdf":
         return FileResponse(path=str(filepath), media_type="application/pdf")
-    raise HTTPException(status_code=404, detail="File not found")
+    raise HTTPException(status_code=404, detail="File not found - use local server for downloads")
