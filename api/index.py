@@ -28,7 +28,7 @@ from typing import Optional, Dict, List
 from starlette.responses import FileResponse
 
 # On Vercel, use /tmp for file storage; locally use the configured folder
-VERCEL = os.getenv("VERCEL", "") == "1" or os.getenv("VERCEL") == "true" or os.getenv("VERCEL")
+VERCEL = os.getenv("VERCEL") == "1" or os.getenv("VERCEL") == "true"
 if VERCEL:
     PDF_FOLDER = Path("/tmp/pdfs")
 else:
