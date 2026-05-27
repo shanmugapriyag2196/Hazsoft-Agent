@@ -91,13 +91,11 @@ def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json",
     }
-    file_url = f"http://localhost:8000/files/{doxc_name}"
     payload = {
         "records": [{
             "fields": {
                 "Date": datetime.datetime.now().isoformat(),
                 "DOXC Name": doxc_name,
-                "Attachment": [{"url": file_url, "filename": doxc_name}]
             }
         }]
     }
