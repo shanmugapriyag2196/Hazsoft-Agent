@@ -1,17 +1,11 @@
 import os
-from pathlib import Path
-from dotenv import load_dotenv
 
-env_path = Path(__file__).parent.parent / ".env"
-load_dotenv(env_path, override=True)
+# Read all config from environment (Vercel sets these)
+PDF_FOLDER = "/tmp/pdfs"
 
-os.environ.setdefault("OPENAI_API_KEY", "")
-os.environ.setdefault("QDRANT_URL", "")
-os.environ.setdefault("QDRANT_API_KEY", "")
-os.environ.setdefault("AIRTABLE_API_KEY", "")
-os.environ.setdefault("AIRTABLE_BASE_ID", "")
-os.environ.setdefault("AIRTABLE_DOC_TABLE_ID", "")
-os.environ.setdefault("VERCEL", "1")
+AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY", "")
+AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID", "")
+AIRTABLE_DOC_TABLE_ID = os.getenv("AIRTABLE_DOC_TABLE_ID", "")
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
@@ -20,15 +14,7 @@ from pydantic import BaseModel
 import datetime
 from typing import Optional, Dict, List
 from starlette.responses import FileResponse
-
-from config import PDF_FOLDER
-from config import AIRTABLE_API_KEY
-from config import AIRTABLE_BASE_ID
-from config import AIRTABLE_TABLE_ID
-from config import AIRTABLE_TABLE_NAME
-from config import AIRTABLE_DOC_TABLE_ID
-
-AIRTABLE_TABLE = AIRTABLE_TABLE_ID or AIRTABLE_TABLE_NAME
+from pathlib import Path
 
 try:
     from rag import answer_question, index_chunks, rag_status
@@ -42,22 +28,6 @@ templates = Jinja2Templates(directory="templates")
 
 class ChatRequest(BaseModel):
     question: str
-
-def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
-    import httpx
-    import urllib.parse
-    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
-        return None
-    encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
-    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
-    headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}", "Content-Type": "application/json"}
-    payload = {"records": [{"fields": {"Question": question, "Response": answer, "Type": material_type, "Date": datetime.datetime.now().isoformat()}}]}
-    try:
-        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
-        response.raise_for_status()
-        return response.json()
-    except Exception:
-        return None
 
 def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
     import httpx
@@ -110,8 +80,8 @@ async def upload_document(file: UploadFile = File(...)):
     content = await file.read()
     
     try:
-        PDF_FOLDER.mkdir(parents=True, exist_ok=True)
-        filepath = PDF_FOLDER / file.filename
+        Path(PDF_FOLDER).mkdir(parents=True, exist_ok=True)
+        filepath = Path(PDF_FOLDER) / file.filename
         with open(filepath, "wb") as f:
             f.write(content)
     except Exception:
@@ -139,7 +109,7 @@ def delete_document(record_id: str):
 
 @app.get("/files/{filename:path}")
 def serve_pdf(filename: str):
-    filepath = PDF_FOLDER / filename
+    filepath = Path(PDF_FOLDER) / filename
     if filepath.exists() and filepath.suffix.lower() == ".pdf":
         return FileResponse(path=str(filepath), media_type="application/pdf")
-    raise HTTPException(status_code=404, detail="File not found")
+    raise HTTPException(status_code=404, detail="File not found - ephemeral on serverless")
