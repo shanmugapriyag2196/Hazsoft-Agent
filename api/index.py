@@ -11,6 +11,7 @@ os.environ.setdefault("QDRANT_API_KEY", "")
 os.environ.setdefault("AIRTABLE_API_KEY", "")
 os.environ.setdefault("AIRTABLE_BASE_ID", "")
 os.environ.setdefault("AIRTABLE_DOC_TABLE_ID", "")
+os.environ.setdefault("VERCEL", "1")
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
@@ -91,7 +92,7 @@ def api_documents():
     import httpx
     import urllib.parse
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
-        return {"documents": []}
+        return {"documents": [], "error": "Missing Airtable config"}
     encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     try:
@@ -99,26 +100,26 @@ def api_documents():
         r.raise_for_status()
         return {"documents": r.json().get("records", [])}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"documents": [], "error": str(e)}
 
 @app.post("/api/upload")
 async def upload_document(file: UploadFile = File(...)):
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
     
-    # Try to save file locally (works for local server, ignored on Vercel)
+    content = await file.read()
+    
     try:
         PDF_FOLDER.mkdir(parents=True, exist_ok=True)
         filepath = PDF_FOLDER / file.filename
-        content = await file.read()
         with open(filepath, "wb") as f:
             f.write(content)
     except Exception:
-        pass  # Continue without file storage on read-only systems
+        pass
     
     result = save_doxc_to_airtable(file.filename)
     if not result:
-        raise HTTPException(status_code=500, detail="Airtable save failed - check API key and table ID")
+        raise HTTPException(status_code=500, detail="Airtable save failed")
     return {"filename": file.filename, "status": "uploaded"}
 
 @app.delete("/api/documents/{record_id}")
@@ -141,4 +142,4 @@ def serve_pdf(filename: str):
     filepath = PDF_FOLDER / filename
     if filepath.exists() and filepath.suffix.lower() == ".pdf":
         return FileResponse(path=str(filepath), media_type="application/pdf")
-    raise HTTPException(status_code=404, detail="File not found - use local server for downloads")
+    raise HTTPException(status_code=404, detail="File not found")
