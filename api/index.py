@@ -2,11 +2,12 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env
+# Load .env if exists (for local dev)
 env_path = Path(__file__).parent.parent / ".env"
-load_dotenv(env_path, override=True)
+if env_path.exists():
+    load_dotenv(env_path, override=True)
 
-# Set defaults for missing env vars
+# Set defaults for missing env vars (Vercel env vars should override these)
 os.environ.setdefault("OPENAI_API_KEY", "")
 os.environ.setdefault("QDRANT_URL", "")
 os.environ.setdefault("QDRANT_API_KEY", "")
@@ -24,13 +25,20 @@ import shutil
 from typing import Optional, Dict, List
 from starlette.responses import FileResponse
 
-from config import PDF_FOLDER
-from config import AIRTABLE_API_KEY
-from config import AIRTABLE_BASE_ID
-from config import AIRTABLE_TABLE_ID
-from config import AIRTABLE_TABLE_NAME
-from config import AIRTABLE_DOC_TABLE_ID
+# On Vercel, use /tmp for file storage; locally use the configured folder
+VERCEL = os.getenv("VERCEL", "")
+if VERCEL:
+    PDF_FOLDER = Path("/tmp/pdfs")
+else:
+    from config import PDF_FOLDER as LOCAL_PDF_FOLDER
+    PDF_FOLDER = LOCAL_PDF_FOLDER
 
+AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY", "")
+AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID", "")
+AIRTABLE_DOC_TABLE_ID = os.getenv("AIRTABLE_DOC_TABLE_ID", "")
+
+AIRTABLE_TABLE_ID = os.getenv("AIRTABLE_TABLE_ID", "")
+AIRTABLE_TABLE_NAME = AIRTABLE_TABLE_ID or "Response_Data"
 AIRTABLE_TABLE = AIRTABLE_TABLE_ID or AIRTABLE_TABLE_NAME
 
 # Lazy import for rag (may fail if Qdrant unavailable)
@@ -110,13 +118,15 @@ def api_documents():
 async def upload_document(file: UploadFile = File(...)):
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
+    
+    # Create /tmp/pdfs on Vercel, or use existing folder locally
+    PDF_FOLDER.mkdir(parents=True, exist_ok=True)
     filepath = PDF_FOLDER / file.filename
+    
     content = await file.read()
-    try:
-        with open(filepath, "wb") as f:
-            f.write(content)
-    except Exception:
-        raise HTTPException(status_code=500, detail="Could not save file")
+    with open(filepath, "wb") as f:
+        f.write(content)
+    
     result = save_doxc_to_airtable(file.filename)
     if not result:
         raise HTTPException(status_code=500, detail="Airtable save failed")
