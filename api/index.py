@@ -22,6 +22,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import datetime
 import shutil
+import base64
 from typing import Optional, Dict, List
 from starlette.responses import FileResponse
 
@@ -71,7 +72,7 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> Opt
     except Exception:
         return None
 
-def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
+def save_doxc_to_airtable(doxc_name: str, file_content: bytes = None) -> Optional[Dict]:
     import httpx
     import urllib.parse
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
@@ -79,7 +80,10 @@ def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
     encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}", "Content-Type": "application/json"}
+    
+    # Build payload - just metadata for now
     payload = {"records": [{"fields": {"Date": datetime.datetime.now().isoformat(), "DOXC Name": doxc_name}}]}
+    
     try:
         response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
         response.raise_for_status()
