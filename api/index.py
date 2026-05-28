@@ -160,6 +160,40 @@ def upload_to_cloudinary(file_content: bytes, filename: str) -> Optional[str]:
         print(f"Cloudinary upload error: {e}")
         return None
 
+def determine_document_type_from_content(file_content: bytes) -> str:
+    """Parse PDF content to determine document type (Hazardous or Others-Gas)."""
+    try:
+        from pypdf import PdfReader
+        import io
+        
+        reader = PdfReader(io.BytesIO(file_content))
+        text = ""
+        for page in reader.pages[:3]:  # Check first 3 pages
+            if page.extract_text():
+                text += page.extract_text().lower() + " "
+        
+        # Check for Gas type
+        if any(kw in text for kw in ["propane", "butane", "hydrogen", "natural gas", "gas cylinder"]):
+            return "Others-Gas"
+        
+        # Check for Hazardous indicators
+        hazard_keywords = ["hazardous", "toxic", "dangerous", "flammable", "corrosive", 
+                          "explosive", "harmful", "danger", "warning"]
+        if any(kw in text for kw in hazard_keywords):
+            # Check if it's a specific type
+            if "chemical" in text or "solvent" in text:
+                return "Hazardous-Chemical"
+            if "cleaning" in text or "detergent" in text:
+                return "Hazardous-Cleaning"
+            if "lab" in text or "laboratory" in text:
+                return "Hazardous-Chemical"
+            return "Hazardous"
+        
+        return "Others"
+    except Exception as e:
+        print(f"PDF parsing error: {e}")
+        return "Others"
+
 def determine_document_type(filename: str) -> str:
     """Determine document type based on filename patterns."""
     lower = filename.lower()
