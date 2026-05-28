@@ -161,18 +161,16 @@ def upload_to_cloudinary(file_content: bytes, filename: str) -> Optional[str]:
         return None
 
 def determine_document_type(filename: str) -> str:
-    """Determine document type based on filename."""
+    """Determine document type based on filename patterns."""
     lower = filename.lower()
     if any(kw in lower for kw in ["gas", "propane", "butane", "hydrogen"]):
-        return "Hazardous - Gas"
-    if any(kw in lower for kw in ["chemical", "solvent", "acid", "reagent"]):
-        return "Hazardous - Chemical"
-    if any(kw in lower for kw in ["cleaning", "detergent", "soap"]):
-        return "Hazardous - Cleaning Products"
-    if any(kw in lower for kw in ["lab", "laboratory"]):
-        return "Hazardous - Laboratory Chemicals"
+        return "Others-Gas"
     if any(kw in lower for kw in ["oxygen", "oxidizer"]):
-        return "Hazardous - Oxidizer"
+        return "Others-Oxygen"
+    if any(kw in lower for kw in ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]):
+        return "Hazardous-Chemical"
+    if any(kw in lower for kw in ["cleaning", "detergent", "soap"]):
+        return "Hazardous-Cleaning"
     return "Others"
 
 def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Optional[Dict]:
