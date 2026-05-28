@@ -14,6 +14,9 @@ os.environ.setdefault("QDRANT_API_KEY", "")
 os.environ.setdefault("AIRTABLE_API_KEY", "")
 os.environ.setdefault("AIRTABLE_BASE_ID", "")
 os.environ.setdefault("AIRTABLE_DOC_TABLE_ID", "")
+os.environ.setdefault("CLOUDINARY_CLOUD_NAME", "")
+os.environ.setdefault("CLOUDINARY_API_KEY", "")
+os.environ.setdefault("CLOUDINARY_API_SECRET", "")
 
 # Import after env is loaded
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File
@@ -24,6 +27,7 @@ import datetime
 import shutil
 import httpx
 import urllib.parse
+import base64
 from typing import Optional, Dict, List
 from starlette.responses import FileResponse
 
@@ -42,6 +46,10 @@ AIRTABLE_DOC_TABLE_ID = os.getenv("AIRTABLE_DOC_TABLE_ID", "")
 AIRTABLE_TABLE_ID = os.getenv("AIRTABLE_TABLE_ID", "")
 AIRTABLE_TABLE_NAME = AIRTABLE_TABLE_ID or "Response_Data"
 AIRTABLE_TABLE = AIRTABLE_TABLE_ID or AIRTABLE_TABLE_NAME
+
+CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY", "")
+CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "")
 
 # Lazy import for rag (may fail if Qdrant unavailable)
 try:
@@ -126,25 +134,56 @@ def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
         print(f"Airtable Doc save error: {e}")
         return None
 
+def upload_to_cloudinary(file_content: bytes, filename: str) -> Optional[str]:
+    """Upload file to Cloudinary and return the public URL."""
+    if not CLOUDINARY_CLOUD_NAME or not CLOUDINARY_API_KEY or not CLOUDINARY_API_SECRET:
+        return None
+    try:
+        import cloudinary
+        import cloudinary.uploader
+        
+        cloudinary.config(
+            cloud_name=CLOUDINARY_CLOUD_NAME,
+            api_key=CLOUDINARY_API_KEY,
+            api_secret=CLOUDINARY_API_SECRET
+        )
+        
+        result = cloudinary.uploader.upload(
+            file_content,
+            public_id=filename.replace('.pdf', ''),
+            resource_type="raw",
+            folder="hazsoft-sds"
+        )
+        print(f"Cloudinary upload success: {result.get('secure_url')}")
+        return result.get('secure_url')
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        return None
+
 def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Optional[Dict]:
-    """Upload PDF file to Airtable attachment field and return record with URL."""
+    """Upload PDF file to Airtable attachment field via Cloudinary URL."""
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
         return None
+    
+    # Upload to Cloudinary first (required for Airtable attachments)
+    file_url = upload_to_cloudinary(file_content, doxc_name)
+    if not file_url:
+        print("Failed to upload to Cloudinary")
+        return None
+    
     encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     headers = {
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json",
     }
-    import base64
-    file_b64 = base64.b64encode(file_content).decode()
     payload = {
         "records": [{
             "fields": {
                 "Date": datetime.datetime.now().isoformat(),
                 "DOXC Name": [{
-                    "filename": doxc_name,
-                    "data": f"data:application/pdf;base64,{file_b64}"
+                    "url": file_url,
+                    "filename": doxc_name
                 }],
             }
         }]
