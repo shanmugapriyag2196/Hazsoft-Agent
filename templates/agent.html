@@ -262,10 +262,15 @@ button#send:disabled {
 
 {% block content %}
 <section class="agent-page">
-  <div class="agent-header">
-    <h2>AI Agent Dashboard</h2>
-    <p class="agent-subtitle">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</p>
-  </div>
+<div class="agent-header">
+     <div style="display: flex; align-items: center; justify-content: space-between;">
+       <h2 style="margin: 0;">AI Agent Dashboard</h2>
+       <button id="refresh-history" title="Refresh History" style="background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 8px; transition: color 0.2s ease;">
+         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4V1a1 1 0 0 0-2 0v3a1 1 0 0 0 1 1h3a1 1 0 0 0 0-2h-2C18.38 4.68 16.75 5 15.12 5 11.75 5 8.7 3.68 6.6 1.54"></path><path d="M1 20v3a1 1 0 0 0 2 0v-3a1 1 0 0 0-1-1H1a1 1 0 0 0 0 2h2c1.62 0 3.25-.32 5.35-2.46"></path></svg>
+       </button>
+     </div>
+     <p class="agent-subtitle">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</p>
+   </div>
   <div class="agent-content">
     <div class="chat-section">
       <div id="chat" aria-live="polite"></div>
@@ -425,5 +430,9 @@ form.addEventListener("submit", async (event) => {
 });
 
 loadHistory();
+
+document.querySelector("#refresh-history").addEventListener("click", () => {
+  loadHistory();
+});
 </script>
 {% endblock %}
