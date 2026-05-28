@@ -86,6 +86,18 @@
 .documents-table .name-cell a:hover {
   text-decoration: underline;
 }
+.documents-table .type-cell {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--green);
+  color: white;
+  white-space: nowrap;
+  width: fit-content;
+}
 .action-cell {
   display: flex;
   gap: 8px;
@@ -129,6 +141,7 @@
     <thead>
       <tr>
         <th>Date</th>
+        <th>Type</th>
         <th>Document Name</th>
         <th style="width: 100px;">Actions</th>
       </tr>
@@ -185,6 +198,7 @@ async function loadDocuments() {
         const fields = item.fields || {};
         const tr = document.createElement("tr");
         const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
+        const docType = fields.Type || "Others";
         const attachmentField = fields["DOXC Name"];
         let doxcName = "";
         let fileUrl = "";
@@ -201,7 +215,7 @@ async function loadDocuments() {
           fileUrl = "/files/" + encodeURIComponent(doxcName);
         }
         
-        tr.innerHTML = `<td class="date-cell">${dateStr}</td><td class="name-cell"><a href="${fileUrl}" target="_blank">${doxcName}</a></td><td class="action-cell"><button class="action-btn download" title="Download"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg></button><button class="action-btn delete" title="Delete"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 3 21 19 21 19 6"></polyline><path d="M8 6V3a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></td>`;
+        tr.innerHTML = `<td class="date-cell">${dateStr}</td><td class="type-cell">${docType}</td><td class="name-cell"><a href="${fileUrl}" target="_blank">${doxcName}</a></td><td class="action-cell"><button class="action-btn download" title="Download"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg></button><button class="action-btn delete" title="Delete"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 3 21 19 21 19 6"></polyline><path d="M8 6V3a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></td>`;
         const downloadBtn = tr.querySelector(".download");
         downloadBtn.addEventListener("click", () => {
           window.open(fileUrl, "_blank");
@@ -220,10 +234,10 @@ async function loadDocuments() {
         tbody.appendChild(tr);
       });
     } else {
-      tbody.innerHTML = '<tr><td colspan="3" class="loading">No documents found</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="loading">No documents found</td></tr>';
     }
   } catch {
-    tbody.innerHTML = '<tr><td colspan="3" class="loading">Unable to load documents</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="loading">Unable to load documents</td></tr>';
   }
 }
 loadDocuments();

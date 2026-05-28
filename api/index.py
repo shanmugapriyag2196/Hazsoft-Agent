@@ -160,6 +160,21 @@ def upload_to_cloudinary(file_content: bytes, filename: str) -> Optional[str]:
         print(f"Cloudinary upload error: {e}")
         return None
 
+def determine_document_type(filename: str) -> str:
+    """Determine document type based on filename."""
+    lower = filename.lower()
+    if any(kw in lower for kw in ["gas", "propane", "butane", "hydrogen"]):
+        return "Hazardous - Gas"
+    if any(kw in lower for kw in ["chemical", "solvent", "acid", "reagent"]):
+        return "Hazardous - Chemical"
+    if any(kw in lower for kw in ["cleaning", "detergent", "soap"]):
+        return "Hazardous - Cleaning Products"
+    if any(kw in lower for kw in ["lab", "laboratory"]):
+        return "Hazardous - Laboratory Chemicals"
+    if any(kw in lower for kw in ["oxygen", "oxidizer"]):
+        return "Hazardous - Oxidizer"
+    return "Others"
+
 def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Optional[Dict]:
     """Upload PDF file to Airtable attachment field via Cloudinary URL."""
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
@@ -170,6 +185,8 @@ def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Opti
     if not file_url:
         print("Failed to upload to Cloudinary")
         return None
+    
+    doc_type = determine_document_type(doxc_name)
     
     encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
@@ -185,6 +202,7 @@ def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Opti
                     "url": file_url,
                     "filename": doxc_name
                 }],
+                "Type": doc_type,
             }
         }]
     }
