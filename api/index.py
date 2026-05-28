@@ -161,32 +161,40 @@ def upload_to_cloudinary(file_content: bytes, filename: str) -> Optional[str]:
         return None
 
 def determine_document_type_from_content(file_content: bytes) -> str:
-    """Parse PDF content to determine document type (Hazardous or Others-Gas)."""
+    """Parse PDF content to determine document type (Hazardous or Others)."""
     try:
         from pypdf import PdfReader
         import io
         
         reader = PdfReader(io.BytesIO(file_content))
         text = ""
-        for page in reader.pages[:3]:  # Check first 3 pages
+        for page in reader.pages[:3]:
             if page.extract_text():
                 text += page.extract_text().lower() + " "
         
-        # Check for Gas type
-        if any(kw in text for kw in ["propane", "butane", "hydrogen", "natural gas", "gas cylinder"]):
+        # Check for Gas type (flammable/combustible gases)
+        gas_patterns = ["propane", "butane", "hydrogen", "natural gas", "methane", "gas cylinder"]
+        if any(kw in text for kw in gas_patterns):
             return "Others-Gas"
         
+        # Check for Oxygen type
+        oxygen_patterns = ["oxygen", "oxidizer", "ox. gas", "oxidising"]
+        if any(kw in text for kw in oxygen_patterns):
+            return "Others-Oxygen"
+        
+        # Check for Chemical type
+        chemical_patterns = ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]
+        if any(kw in text for kw in chemical_patterns):
+            return "Hazardous-Chemical"
+        
+        # Check for Cleaning type
+        cleaning_patterns = ["cleaning", "detergent", "soap"]
+        if any(kw in text for kw in cleaning_patterns):
+            return "Hazardous-Cleaning"
+        
         # Check for Hazardous indicators
-        hazard_keywords = ["hazardous", "toxic", "dangerous", "flammable", "corrosive", 
-                          "explosive", "harmful", "danger", "warning"]
+        hazard_keywords = ["hazardous", "toxic", "dangerous", "flammable", "corrosive", "explosive"]
         if any(kw in text for kw in hazard_keywords):
-            # Check if it's a specific type
-            if "chemical" in text or "solvent" in text:
-                return "Hazardous-Chemical"
-            if "cleaning" in text or "detergent" in text:
-                return "Hazardous-Cleaning"
-            if "lab" in text or "laboratory" in text:
-                return "Hazardous-Chemical"
             return "Hazardous"
         
         return "Others"
@@ -218,7 +226,7 @@ def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Opti
         print("Failed to upload to Cloudinary")
         return None
     
-    doc_type = determine_document_type(doxc_name)
+    doc_type = determine_document_type_from_content(file_content)
     
     encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
