@@ -15,7 +15,6 @@
   backdrop-filter: blur(10px);
 }
 .agent-header {
-  text-align: center;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--line);
   margin-bottom: 20px;
@@ -206,6 +205,28 @@
 .more-button:hover {
   background: rgba(5, 150, 105, 0.08);
 }
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--green);
+  transform: rotate(180deg);
+}
+.refresh-btn svg {
+  width: 20px;
+  height: 20px;
+}
 form {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -263,14 +284,14 @@ button#send:disabled {
 {% block content %}
 <section class="agent-page">
 <div class="agent-header">
-     <div style="display: flex; align-items: center; justify-content: space-between;">
-       <h2 style="margin: 0;">AI Agent Dashboard</h2>
-       <button id="refresh-history" title="Refresh History" style="background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 8px; transition: color 0.2s ease;">
-         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4V1a1 1 0 0 0-2 0v3a1 1 0 0 0 1 1h3a1 1 0 0 0 0-2h-2C18.38 4.68 16.75 5 15.12 5 11.75 5 8.7 3.68 6.6 1.54"></path><path d="M1 20v3a1 1 0 0 0 2 0v-3a1 1 0 0 0-1-1H1a1 1 0 0 0 0 2h2c1.62 0 3.25-.32 5.35-2.46"></path></svg>
-       </button>
-     </div>
-     <p class="agent-subtitle">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</p>
-   </div>
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="margin: 0;">AI Agent Dashboard</h2>
+        <button class="refresh-btn" id="refresh-history" title="Refresh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4V1a1 1 0 0 0-2 0v3a1 1 0 0 0 1 1h3a1 1 0 0 0 0-2h-2C18.38 4.68 16.75 5 15.12 5 11.75 5 8.7 3.68 6.6 1.54"></path><path d="M1 20v3a1 1 0 0 0 2 0v-3a1 1 0 0 0-1-1H1a1 1 0 0 0 0 2h2c1.62 0 3.25-.32 5.35-2.46"></path></svg>
+        </button>
+      </div>
+      <p class="agent-subtitle">AI Agent ready. Ask about hazards, PPE, storage, first aid, spill response, disposal, or product details.</p>
+    </div>
   <div class="agent-content">
     <div class="chat-section">
       <div id="chat" aria-live="polite"></div>
