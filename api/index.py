@@ -161,7 +161,7 @@ def upload_to_cloudinary(file_content: bytes, filename: str) -> Optional[str]:
         return None
 
 def determine_document_type_from_content(file_content: bytes) -> str:
-    """Parse PDF content to determine document type (Hazardous or Others)."""
+    """Parse PDF content to determine document type (Hazardous-gas, Oxygen, Non Hazardous, Others-Gas, Chemicals)."""
     try:
         from pypdf import PdfReader
         import io
@@ -172,29 +172,26 @@ def determine_document_type_from_content(file_content: bytes) -> str:
             if page.extract_text():
                 text += page.extract_text().lower() + " "
         
-        # Check for Gas type (flammable/combustible gases)
+        # Check for Hazardous-gas (flammable/combustible gases with hazard indicators)
         gas_patterns = ["propane", "butane", "hydrogen", "natural gas", "methane", "gas cylinder"]
+        hazard_indicators = ["hazardous", "toxic", "dangerous", "flammable", "corrosive", "explosive", "warning"]
         if any(kw in text for kw in gas_patterns):
+            if any(hw in text for hw in hazard_indicators):
+                return "Hazardous-gas"
             return "Others-Gas"
         
-        # Check for Oxygen type
+        # Check for Oxygen
         oxygen_patterns = ["oxygen", "oxidizer", "ox. gas", "oxidising"]
         if any(kw in text for kw in oxygen_patterns):
-            return "Others-Oxygen"
+            return "Oxygen"
         
-        # Check for Chemical type
+        # Check for Chemicals
         chemical_patterns = ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]
         if any(kw in text for kw in chemical_patterns):
-            return "Hazardous-Chemical"
+            return "Chemicals"
         
-        # Check for Cleaning type
-        cleaning_patterns = ["cleaning", "detergent", "soap"]
-        if any(kw in text for kw in cleaning_patterns):
-            return "Hazardous-Cleaning"
-        
-        # Check for Hazardous indicators
-        hazard_keywords = ["hazardous", "toxic", "dangerous", "flammable", "corrosive", "explosive"]
-        if any(kw in text for kw in hazard_keywords):
+        # Check for Non Hazardous (has hazard indicators but no specific type matched)
+        if any(kw in text for kw in hazard_indicators):
             return "Hazardous"
         
         return "Others"
