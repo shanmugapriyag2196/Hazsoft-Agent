@@ -109,7 +109,7 @@ def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
         "records": [{
             "fields": {
                 "Date": datetime.datetime.now().isoformat(),
-                "DOXC Name": doxc_name,
+                "DOXC Name": [{"filename": doxc_name}],
             }
         }]
     }
@@ -124,6 +124,42 @@ def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
         return None
     except Exception as e:
         print(f"Airtable Doc save error: {e}")
+        return None
+
+def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Optional[Dict]:
+    """Upload PDF file to Airtable attachment field and return record with URL."""
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
+        return None
+    encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    import base64
+    file_b64 = base64.b64encode(file_content).decode()
+    payload = {
+        "records": [{
+            "fields": {
+                "Date": datetime.datetime.now().isoformat(),
+                "DOXC Name": [{
+                    "filename": doxc_name,
+                    "data": f"data:application/pdf;base64,{file_b64}"
+                }],
+            }
+        }]
+    }
+    try:
+        response = httpx.post(url, headers=headers, json=payload, timeout=60.0)
+        response.raise_for_status()
+        result = response.json()
+        print(f"Airtable Doc upload success: {result}")
+        return result
+    except httpx.HTTPStatusError as e:
+        print(f"Airtable Doc upload error - Status: {e.response.status_code}, Body: {e.response.text}")
+        return None
+    except Exception as e:
+        print(f"Airtable Doc upload error: {e}")
         return None
 
 
@@ -146,9 +182,14 @@ def get_all_airtable_doxc_names() -> set:
     records = get_doxc_records()
     names = set()
     for r in records:
-        name = r.get("fields", {}).get("DOXC Name")
-        if name:
-            names.add(name)
+        doxc_field = r.get("fields", {}).get("DOXC Name")
+        if doxc_field:
+            if isinstance(doxc_field, list):
+                for item in doxc_field:
+                    if isinstance(item, dict) and item.get("filename"):
+                        names.add(item["filename"])
+            elif isinstance(doxc_field, str):
+                names.add(doxc_field)
     return names
 
 def get_chat_history(limit: int = 20) -> List[Dict]:
@@ -303,18 +344,36 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="No file provided")
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
-    PDF_FOLDER.mkdir(parents=True, exist_ok=True)
-    filepath = PDF_FOLDER / file.filename
-    with open(filepath, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    save_doxc_to_airtable(file.filename)
-    return {"filename": file.filename, "status": "uploaded"}
+    
+    content = await file.read()
+    
+    if VERCEL:
+        # Vercel: upload to Airtable attachment only
+        result = save_doxc_to_airtable_with_file(file.filename, content)
+        if not result:
+            raise HTTPException(status_code=500, detail="Airtable save failed")
+        return {"filename": file.filename, "status": "uploaded", "url": result.get("records", [{}])[0].get("fields", {}).get("DOXC Name", [])}
+    else:
+        # Local: save to folder AND Airtable
+        PDF_FOLDER.mkdir(parents=True, exist_ok=True)
+        filepath = PDF_FOLDER / file.filename
+        with open(filepath, "wb") as buffer:
+            buffer.write(content)
+        save_doxc_to_airtable(file.filename)
+        return {"filename": file.filename, "status": "uploaded"}
 
 @app.get("/files/{filename:path}")
 def serve_pdf(filename: str):
-    filepath = PDF_FOLDER / filename
-    if filepath.exists() and filepath.suffix.lower() == ".pdf":
-        return FileResponse(path=str(filepath), media_type="application/pdf")
+    if VERCEL:
+        # On Vercel, files are in /tmp/pdfs
+        filepath = PDF_FOLDER / filename
+        if filepath.exists() and filepath.suffix.lower() == ".pdf":
+            return FileResponse(path=str(filepath), media_type="application/pdf")
+    else:
+        # Local: serve from PDF_FOLDER
+        filepath = PDF_FOLDER / filename
+        if filepath.exists() and filepath.suffix.lower() == ".pdf":
+            return FileResponse(path=str(filepath), media_type="application/pdf")
     raise HTTPException(status_code=404, detail="File not found")
 
 @app.delete("/api/documents/{record_id}")
