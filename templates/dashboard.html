@@ -375,5 +375,39 @@ document.querySelectorAll(".nav-item[data-page]").forEach(item => {
     item.classList.add("active");
   }
 });
+
+async function loadStats() {
+  try {
+    const response = await fetch("/api/stats");
+    const data = await response.json();
+    
+    document.querySelector('.metric-value:nth-of-type(1)').textContent = data.total;
+    document.querySelector('.metric-value:nth-of-type(2)').textContent = data.hazardous_count;
+    document.querySelector('.metric-value:nth-of-type(3)').textContent = data.others_count;
+    document.querySelector('.metric-value:nth-of-type(4)').textContent = Object.keys(data.categories).filter(k => data.categories[k] > 0).length;
+    
+    const max = Math.max(...Object.values(data.categories), 1);
+    const barChart = document.querySelector('.bar-chart');
+    const cats = ["Hazardous-gas", "Oxygen", "Chemicals", "Non Hazardous", "Others-Gas", "Others"];
+    const labels = {"Hazardous-gas": "Hazardous Gas", "Oxygen": "Oxygen", "Chemicals": "Chemicals", "Non Hazardous": "Non Hazardous", "Others-Gas": "Others-Gas", "Others": "Others"};
+    const colors = { "Hazardous-gas": "var(--blue)", "Oxygen": "var(--green)", "Chemicals": "var(--red)", "Non Hazardous": "var(--purple)", "Others-Gas": "var(--teal)", "Others": "var(--amber)" };
+    
+    barChart.innerHTML = "";
+    cats.forEach(cat => {
+      const count = data.categories[cat] || 0;
+      const pct = Math.round((count / max) * 100);
+      barChart.innerHTML += `
+        <div class="bar-row">
+          <div class="bar-label">${labels[cat]}</div>
+          <div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${colors[cat]};"></div></div>
+          <div class="bar-value">${count}</div>
+        </div>
+      `;
+    });
+  } catch (e) {
+    console.error("Failed to load stats:", e);
+  }
+}
+loadStats();
 </script>
 {% endblock %}

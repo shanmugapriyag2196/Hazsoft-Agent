@@ -172,29 +172,22 @@ def determine_document_type_from_content(file_content: bytes) -> str:
             if page.extract_text():
                 text += page.extract_text().lower() + " "
         
-        # Check for Hazardous-gas (flammable/combustible gases with hazard indicators)
-        gas_patterns = ["propane", "butane", "hydrogen", "natural gas", "methane", "gas cylinder"]
-        hazard_indicators = ["hazardous", "toxic", "dangerous", "flammable", "corrosive", "explosive", "warning"]
-        if any(kw in text for kw in gas_patterns):
-            if any(hw in text for hw in hazard_indicators):
-                return "Hazardous-gas"
-            return "Others-Gas"
+        hazard_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
+        has_hazard = any(hw in text for hw in hazard_indicators)
         
-        # Check for Oxygen
+        gas_patterns = ["propane", "butane", "hydrogen", "natural gas", "methane", "gas cylinder"]
+        if any(kw in text for kw in gas_patterns):
+            return "Hazardous-gas" if has_hazard else "Others-Gas"
+        
         oxygen_patterns = ["oxygen", "oxidizer", "ox. gas", "oxidising"]
         if any(kw in text for kw in oxygen_patterns):
             return "Oxygen"
         
-        # Check for Chemicals
         chemical_patterns = ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]
         if any(kw in text for kw in chemical_patterns):
             return "Chemicals"
         
-        # Check for Non Hazardous (has hazard indicators but no specific type matched)
-        if any(kw in text for kw in hazard_indicators):
-            return "Hazardous"
-        
-        return "Others"
+        return "Non Hazardous" if has_hazard else "Others"
     except Exception as e:
         print(f"PDF parsing error: {e}")
         return "Others"
@@ -205,12 +198,10 @@ def determine_document_type(filename: str) -> str:
     if any(kw in lower for kw in ["gas", "propane", "butane", "hydrogen"]):
         return "Others-Gas"
     if any(kw in lower for kw in ["oxygen", "oxidizer"]):
-        return "Others-Oxygen"
+        return "Oxygen"
     if any(kw in lower for kw in ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]):
-        return "Hazardous-Chemical"
-    if any(kw in lower for kw in ["cleaning", "detergent", "soap"]):
-        return "Hazardous-Cleaning"
-    return "Others"
+        return "Chemicals"
+    return "Non Hazardous"
 
 def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Optional[Dict]:
     """Upload PDF file to Airtable attachment field via Cloudinary URL."""
@@ -338,6 +329,41 @@ def api_documents():
     try:
         records = get_doxc_records()
         return {"documents": records}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@app.get("/api/stats")
+def api_stats():
+    try:
+        records = get_doxc_records()
+        total = len(records)
+        
+        hazardous_types = ["Hazardous-gas", "Oxygen", "Chemicals", "Non Hazardous"]
+        counts = {t: 0 for t in hazardous_types}
+        counts["Others"] = 0
+        counts["Others-Gas"] = 0
+        
+        hazardous_count = 0
+        others_count = 0
+        
+        for rec in records:
+            doc_type = rec.get("fields", {}).get("Type", "Others")
+            if doc_type in counts:
+                counts[doc_type] += 1
+            else:
+                counts["Others"] += 1
+            
+            if doc_type in hazardous_types:
+                hazardous_count += 1
+            else:
+                others_count += 1
+        
+        return {
+            "total": total,
+            "hazardous_count": hazardous_count,
+            "others_count": others_count,
+            "categories": counts
+        }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
