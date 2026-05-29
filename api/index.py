@@ -161,7 +161,7 @@ def upload_to_cloudinary(file_content: bytes, filename: str) -> Optional[str]:
         return None
 
 def determine_document_type_from_content(file_content: bytes) -> str:
-    """Parse PDF content to determine document type (Hazardous-gas, Oxygen, Non Hazardous, Others-Gas, Chemicals)."""
+    """Parse PDF content to determine document type (Hazardous-gas, Hazardous-chemical, Oxygen, Non Hazardous, Others-Gas, Others)."""
     try:
         from pypdf import PdfReader
         import io
@@ -185,7 +185,7 @@ def determine_document_type_from_content(file_content: bytes) -> str:
         
         chemical_patterns = ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]
         if any(kw in text for kw in chemical_patterns):
-            return "Chemicals"
+            return "Hazardous-chemical" if has_hazard else "Others-chemical"
         
         return "Non Hazardous" if has_hazard else "Others"
     except Exception as e:
@@ -200,8 +200,8 @@ def determine_document_type(filename: str) -> str:
     if any(kw in lower for kw in ["oxygen", "oxidizer"]):
         return "Oxygen"
     if any(kw in lower for kw in ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]):
-        return "Chemicals"
-    return "Non Hazardous"
+        return "Hazardous-chemical"
+    return "Others"
 
 def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Optional[Dict]:
     """Upload PDF file to Airtable attachment field via Cloudinary URL."""
@@ -336,28 +336,30 @@ def api_documents():
 def api_stats():
     try:
         records = get_doxc_records()
-        total = len(records)
+        total = 0
+        for r in records:
+            doxc_field = r.get("fields", {}).get("DOXC Name")
+            if doxc_field:
+                total += 1
         
-        all_types = ["Hazardous-gas", "Oxygen", "Chemicals", "Non Hazardous", "Others-Gas", "Others"]
-        counts = {t: 0 for t in all_types}
+        counts = {}
         
-        hazardous_types = ["Hazardous-gas", "Oxygen", "Chemicals", "Non Hazardous"]
+        hazardous_count = 0
+        others_count = 0
         
         for rec in records:
             doc_type = rec.get("fields", {}).get("Type", "Others")
-            if doc_type in counts:
-                counts[doc_type] += 1
+            counts[doc_type] = (counts.get(doc_type, 0) or 0) + 1
+            
+            if doc_type.startswith("Hazardous") or doc_type == "Oxygen":
+                hazardous_count += 1
             else:
-                counts["Others"] += 1
-        
-        hazardous_count = sum(counts[t] for t in hazardous_types)
-        others_count = counts["Others"] + counts["Others-Gas"]
-        categories_count = counts["Others"]
+                others_count += 1
         
         return {
             "total": total,
             "hazardous_count": hazardous_count,
-            "categories_count": categories_count,
+            "others_count": others_count,
             "counts": counts
         }
     except Exception as exc:

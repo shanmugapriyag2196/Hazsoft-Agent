@@ -304,22 +304,17 @@ h1 {
   <article class="metric">
     <div class="metric-label">Total SDS Documents</div>
     <div class="metric-value">15</div>
-    <div class="metric-note">Available in Qdrant collection</div>
+    <div class="metric-note">Documents in Airtable Doc table</div>
   </article>
   <article class="metric">
     <div class="metric-label">Hazardous Material</div>
     <div class="metric-value">9</div>
-    <div class="metric-note">Requires handling controls</div>
-  </article>
-  <article class="metric">
-    <div class="metric-label">Non-Hazardous Material</div>
-    <div class="metric-value">6</div>
-    <div class="metric-note">General SDS references</div>
+    <div class="metric-note">Hazardous-* type documents</div>
   </article>
   <article class="metric">
     <div class="metric-label">Categories</div>
-    <div class="metric-value" id="categories-count">4</div>
-    <div class="metric-note">Others type documents</div>
+    <div class="metric-value">4</div>
+    <div class="metric-note">Others-* type documents</div>
   </article>
 </section>
 
@@ -383,24 +378,20 @@ async function loadStats() {
     
     document.querySelector('.metric-value:nth-of-type(1)').textContent = data.total;
     document.querySelector('.metric-value:nth-of-type(2)').textContent = data.hazardous_count;
-    document.querySelector('.metric-value:nth-of-type(3)').textContent = data.categories_count;
-    document.querySelector('#categories-count').textContent = Object.keys(data.counts).filter(k => data.counts[k] > 0).length;
+    document.querySelector('.metric-value:nth-of-type(3)').textContent = data.others_count;
     
     const counts = data.counts;
     const max = Math.max(...Object.values(counts), 1);
     const barChart = document.querySelector('.bar-chart');
-    const cats = ["Hazardous-gas", "Oxygen", "Chemicals", "Non Hazardous", "Others-Gas", "Others"];
-    const labels = {"Hazardous-gas": "Hazardous Gas", "Oxygen": "Oxygen", "Chemicals": "Chemicals", "Non Hazardous": "Non Hazardous", "Others-Gas": "Others-Gas", "Others": "Others"};
-    const colors = { "Hazardous-gas": "var(--blue)", "Oxygen": "var(--green)", "Chemicals": "var(--red)", "Non Hazardous": "var(--purple)", "Others-Gas": "var(--teal)", "Others": "var(--amber)" };
+    const colors = {"Hazardous-gas": "var(--blue)", "Oxygen": "var(--green)", "Chemicals": "var(--red)", "Non Hazardous": "var(--purple)", "Others-Gas": "var(--teal)", "Others": "var(--amber)"};
     
     barChart.innerHTML = "";
-    cats.forEach(cat => {
-      const count = counts[cat] || 0;
+    Object.entries(counts).forEach(([cat, count]) => {
       const pct = Math.round((count / max) * 100);
       barChart.innerHTML += `
         <div class="bar-row">
-          <div class="bar-label">${labels[cat]}</div>
-          <div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${colors[cat]};"></div></div>
+          <div class="bar-label">${cat}</div>
+          <div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${colors[cat] || 'var(--gray)'};"></div></div>
           <div class="bar-value">${count}</div>
         </div>
       `;
