@@ -351,7 +351,7 @@ def api_stats():
             doc_type = rec.get("fields", {}).get("Type", "Others")
             counts[doc_type] = (counts.get(doc_type, 0) or 0) + 1
             
-            if doc_type.startswith("Hazardous") or doc_type == "Oxygen":
+            if doc_type.startswith("Hazardous"):
                 hazardous_count += 1
             else:
                 others_count += 1
