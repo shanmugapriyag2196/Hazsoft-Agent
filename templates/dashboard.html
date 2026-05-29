@@ -303,17 +303,17 @@ h1 {
 <section class="metrics" aria-label="SDS summary">
   <article class="metric">
     <div class="metric-label">Total SDS Documents</div>
-    <div class="metric-value">15</div>
+    <div class="metric-value" id="total-docs">15</div>
     <div class="metric-note">Documents in Airtable Doc table</div>
   </article>
   <article class="metric">
     <div class="metric-label">Hazardous Material</div>
-    <div class="metric-value">9</div>
+    <div class="metric-value" id="hazardous-count">9</div>
     <div class="metric-note">Hazardous-* type documents</div>
   </article>
   <article class="metric">
     <div class="metric-label">Categories</div>
-    <div class="metric-value">4</div>
+    <div class="metric-value" id="categories-count">4</div>
     <div class="metric-note">Others-* type documents</div>
   </article>
 </section>
@@ -376,9 +376,9 @@ async function loadStats() {
     const response = await fetch("/api/stats");
     const data = await response.json();
     
-    document.querySelector('.metric-value:nth-of-type(1)').textContent = data.total;
-    document.querySelector('.metric-value:nth-of-type(2)').textContent = data.hazardous_count;
-    document.querySelector('.metric-value:nth-of-type(3)').textContent = data.others_count;
+    document.getElementById('total-docs').textContent = data.total;
+    document.getElementById('hazardous-count').textContent = data.hazardous_count;
+    document.getElementById('categories-count').textContent = data.others_count;
     
     const counts = data.counts;
     const max = Math.max(...Object.values(counts), 1);
