@@ -318,8 +318,8 @@ h1 {
   </article>
   <article class="metric">
     <div class="metric-label">Categories</div>
-    <div class="metric-value">4</div>
-    <div class="metric-note">Gas, chemicals, cleaning, lab</div>
+    <div class="metric-value" id="categories-count">4</div>
+    <div class="metric-note">Others type documents</div>
   </article>
 </section>
 
@@ -383,10 +383,11 @@ async function loadStats() {
     
     document.querySelector('.metric-value:nth-of-type(1)').textContent = data.total;
     document.querySelector('.metric-value:nth-of-type(2)').textContent = data.hazardous_count;
-    document.querySelector('.metric-value:nth-of-type(3)').textContent = data.others_count;
-    document.querySelector('.metric-value:nth-of-type(4)').textContent = Object.keys(data.categories).filter(k => data.categories[k] > 0).length;
+    document.querySelector('.metric-value:nth-of-type(3)').textContent = data.categories_count;
+    document.querySelector('#categories-count').textContent = Object.keys(data.counts).filter(k => data.counts[k] > 0).length;
     
-    const max = Math.max(...Object.values(data.categories), 1);
+    const counts = data.counts;
+    const max = Math.max(...Object.values(counts), 1);
     const barChart = document.querySelector('.bar-chart');
     const cats = ["Hazardous-gas", "Oxygen", "Chemicals", "Non Hazardous", "Others-Gas", "Others"];
     const labels = {"Hazardous-gas": "Hazardous Gas", "Oxygen": "Oxygen", "Chemicals": "Chemicals", "Non Hazardous": "Non Hazardous", "Others-Gas": "Others-Gas", "Others": "Others"};
@@ -394,7 +395,7 @@ async function loadStats() {
     
     barChart.innerHTML = "";
     cats.forEach(cat => {
-      const count = data.categories[cat] || 0;
+      const count = counts[cat] || 0;
       const pct = Math.round((count / max) * 100);
       barChart.innerHTML += `
         <div class="bar-row">

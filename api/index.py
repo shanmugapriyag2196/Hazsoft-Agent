@@ -338,13 +338,10 @@ def api_stats():
         records = get_doxc_records()
         total = len(records)
         
-        hazardous_types = ["Hazardous-gas", "Oxygen", "Chemicals", "Non Hazardous"]
-        counts = {t: 0 for t in hazardous_types}
-        counts["Others"] = 0
-        counts["Others-Gas"] = 0
+        all_types = ["Hazardous-gas", "Oxygen", "Chemicals", "Non Hazardous", "Others-Gas", "Others"]
+        counts = {t: 0 for t in all_types}
         
-        hazardous_count = 0
-        others_count = 0
+        hazardous_types = ["Hazardous-gas", "Oxygen", "Chemicals", "Non Hazardous"]
         
         for rec in records:
             doc_type = rec.get("fields", {}).get("Type", "Others")
@@ -352,17 +349,16 @@ def api_stats():
                 counts[doc_type] += 1
             else:
                 counts["Others"] += 1
-            
-            if doc_type in hazardous_types:
-                hazardous_count += 1
-            else:
-                others_count += 1
+        
+        hazardous_count = sum(counts[t] for t in hazardous_types)
+        others_count = counts["Others"] + counts["Others-Gas"]
+        categories_count = counts["Others"]
         
         return {
             "total": total,
             "hazardous_count": hazardous_count,
-            "others_count": others_count,
-            "categories": counts
+            "categories_count": categories_count,
+            "counts": counts
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
