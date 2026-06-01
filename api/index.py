@@ -356,11 +356,55 @@ def api_stats():
             else:
                 others_count += 1
         
+        # Calculate compliance stats based on document types
+        # This is a placeholder logic - in reality, this would come from actual compliance data
+        hazardous_chemical_count = counts.get("Hazardous-Chemical", 0)
+        hazardous_gas_count = counts.get("Hazardous-gas", 0)
+        others_gas_count = counts.get("Others-Gas", 0)
+        others_oxygen_count = counts.get("Others-Oxygen", 0)
+        others_count = counts.get("Others", 0)
+        
+        # Simple compliance logic (placeholder):
+        # - Compliant: Others types (assumed to be properly handled non-hazardous materials)
+        # - Needs review: Hazardous gases (may need special handling checks)
+        # - Action required: Hazardous chemicals (require immediate safety measures)
+        compliant_count = others_gas_count + others_oxygen_count + others_count
+        needs_review_count = hazardous_gas_count
+        action_required_count = hazardous_chemical_count
+        
+        # Avoid division by zero
+        if total == 0:
+            compliant_pct = 0
+            needs_review_pct = 0
+            action_required_pct = 0
+        else:
+            compliant_pct = round((compliant_count / total) * 100)
+            needs_review_pct = round((needs_review_count / total) * 100)
+            action_required_pct = round((action_required_count / total) * 100)
+            
+            # Adjust to ensure we don't lose precision due to rounding
+            # Assign remainder to the largest category to make total 100%
+            total_pct = compliant_pct + needs_review_pct + action_required_pct
+            if total_pct != 100:
+                diff = 100 - total_pct
+                # Add to the largest category
+                if compliant_pct >= needs_review_pct and compliant_pct >= action_required_pct:
+                    compliant_pct += diff
+                elif needs_review_pct >= compliant_pct and needs_review_pct >= action_required_pct:
+                    needs_review_pct += diff
+                else:
+                    action_required_pct += diff
+        
         return {
             "total": total,
             "hazardous_count": hazardous_count,
             "others_count": others_count,
-            "counts": counts
+            "counts": counts,
+            "compliance": {
+                "compliant": compliant_pct,
+                "needs_review": needs_review_pct,
+                "action_required": action_required_pct
+            }
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

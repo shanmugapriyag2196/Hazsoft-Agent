@@ -347,16 +347,16 @@ h1 {
   </article>
 
   <article class="panel">
-    <h2>Regulatory Compliance</h2>
+<h2>Regulatory Compliance</h2>
     <p class="panel-subtitle">Current SDS readiness view across the indexed document set.</p>
     <div class="donut-layout">
       <div class="donut" role="img" aria-label="Regulatory compliance donut chart">
-        <div class="donut-center">62%<span>Compliant</span></div>
+        <div class="donut-center" id="compliant-percentage">62%<span>Compliant</span></div>
       </div>
       <div class="legend">
-        <div class="legend-item"><span class="dot" style="background: var(--green);"></span><span>GHS aligned</span><strong>62%</strong></div>
-        <div class="legend-item"><span class="dot" style="background: var(--amber);"></span><span>Needs review</span><strong>23%</strong></div>
-        <div class="legend-item"><span class="dot" style="background: var(--red);"></span><span>Action required</span><strong>15%</strong></div>
+        <div class="legend-item"><span class="dot" style="background: var(--green);"></span><span>GHS aligned</span><strong id="ghs-aligned">62%</strong></div>
+        <div class="legend-item"><span class="dot" style="background: var(--amber);"></span><span>Needs review</span><strong id="needs-review">23%</strong></div>
+        <div class="legend-item"><span class="dot" style="background: var(--red);"></span><span>Action required</span><strong id="action-required">15%</strong></div>
       </div>
     </div>
   </article>
@@ -379,6 +379,14 @@ async function loadStats() {
     document.getElementById('total-docs').textContent = data.total;
     document.getElementById('hazardous-count').textContent = data.hazardous_count;
     document.getElementById('categories-count').textContent = data.others_count;
+    
+    // Update compliance stats
+    if (data.compliance) {
+      document.getElementById('compliant-percentage').innerHTML = `${data.compliance.compliant}%<span>Compliant</span>`;
+      document.getElementById('ghs-aligned').textContent = `${data.compliance.compliant}%`;
+      document.getElementById('needs-review').textContent = `${data.compliance.needs_review}%`;
+      document.getElementById('action-required').textContent = `${data.compliance.action_required}%`;
+    }
     
     const counts = data.counts;
     const max = Math.max(...Object.values(counts), 1);
