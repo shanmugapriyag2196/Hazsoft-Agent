@@ -324,6 +324,10 @@ def agent(request: Request):
 def documents(request: Request):
     return templates.TemplateResponse("documents.html", {"request": request})
 
+@app.get("/settings", response_class=HTMLResponse)
+def settings(request: Request):
+    return templates.TemplateResponse("settings.html", {"request": request})
+
 @app.get("/api/documents")
 def api_documents():
     try:
