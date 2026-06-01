@@ -362,13 +362,13 @@ def api_stats():
         hazardous_gas_count = counts.get("Hazardous-gas", 0)
         others_gas_count = counts.get("Others-Gas", 0)
         others_oxygen_count = counts.get("Others-Oxygen", 0)
-        others_count = counts.get("Others", 0)
+        others_type_count = counts.get("Others", 0)
         
         # Simple compliance logic (placeholder):
         # - Compliant: Others types (assumed to be properly handled non-hazardous materials)
         # - Needs review: Hazardous gases (may need special handling checks)
         # - Action required: Hazardous chemicals (require immediate safety measures)
-        compliant_count = others_gas_count + others_oxygen_count + others_count
+        compliant_count = others_gas_count + others_oxygen_count + others_type_count
         needs_review_count = hazardous_gas_count
         action_required_count = hazardous_chemical_count
         
