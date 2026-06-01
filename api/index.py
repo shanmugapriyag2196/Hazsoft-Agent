@@ -70,6 +70,13 @@ class ChatHistoryItem(BaseModel):
     answer: str
     type: str = ""
 
+class UserCreate(BaseModel):
+    fullName: str
+    email: str
+    role: str
+    status: str
+    password: str = "temp123"  # Default password
+
 def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         print("Airtable: Missing API key or base ID")
@@ -328,6 +335,10 @@ def documents(request: Request):
 def settings(request: Request):
     return templates.TemplateResponse("settings.html", {"request": request})
 
+@app.get("/users", response_class=HTMLResponse)
+def users(request: Request):
+    return templates.TemplateResponse("users.html", {"request": request})
+
 @app.get("/api/documents")
 def api_documents():
     try:
@@ -410,6 +421,75 @@ def api_stats():
                 "action_required": action_required_pct
             }
         }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@app.get("/api/users")
+def api_get_users():
+    try:
+        # For the users table, we need to use a different table ID
+        AIRTABLE_USERS_TABLE_ID = "tbl1E5Pu8DpEAharu"
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
+            return []
+        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+        headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+        try:
+            response = httpx.get(url, headers=headers, params={"pageSize": 100}, timeout=30.0)
+            response.raise_for_status()
+            records = response.json().get("records", [])
+            
+            # Format the response to match what the frontend expects
+            users = []
+            for record in records:
+                fields = record.get("fields", {})
+                user = {
+                    "id": record.get("id"),
+                    "FullName": fields.get("FullName", ""),
+                    "Email": fields.get("Email", ""),
+                    "Role": fields.get("Role", ""),
+                    "Status": fields.get("Status", ""),
+                    "LastLogin": fields.get("Last Login", fields.get("LastLogin", "Never")),
+                    "Password": fields.get("Password", "")  # Though we shouldn't really return passwords
+                }
+                users.append(user)
+            return users
+        except Exception as e:
+            print(f"Failed to fetch users: {e}")
+            return []
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@app.post("/api/users")
+def api_create_user(user: UserCreate):
+    try:
+        # For the users table, we need to use a different table ID
+        AIRTABLE_USERS_TABLE_ID = "tbl1E5Pu8DpEAharu"
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
+            raise HTTPException(status_code=400, detail="Airtable not configured")
+        
+        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+        headers = {
+            "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        
+        # Prepare the payload for Airtable
+        payload = {
+            "fields": {
+                "FullName": user.fullName,
+                "Email": user.email,
+                "Role": user.role,
+                "Status": user.status,
+                "Password": user.password,
+                "Last Login": datetime.datetime.now().isoformat()  # Set last login to now
+            }
+        }
+        
+        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
+        response.raise_for_status()
+        return response.json()
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

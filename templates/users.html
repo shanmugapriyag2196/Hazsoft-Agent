@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Users - Hazsoft Agent{% endblock %}
+
+{% block styles %}
+.users-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.users-header h2 {
+  margin: 0;
+  color: var(--ink);
+}
+.add-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--green), #047857);
+  color: white;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+.add-user-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.25);
+}
+.add-user-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.users-table th {
+  text-align: left;
+  padding: 16px;
+  background: #f8fafc;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 2px solid var(--line);
+}
+.users-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+.users-table tr:hover {
+  background: #f1f5f9;
+}
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.status-active {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+}
+.status-inactive {
+  background: rgba(220, 38, 38, 0.2);
+  color: #dc2626;
+}
+.actions-btn {
+  display: flex;
+  gap: 8px;
+}
+.action-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+}
+.edit-btn {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--blue);
+}
+.delete-btn {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--red);
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.modal-header h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 20px;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.modal-close:hover {
+  background: rgba(0,0,0,0.05);
+}
+.modal-body {
+  padding: 24px;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+}
+.form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--line);
+}
+.btn-secondary {
+  background: rgba(0,0,0,0.05);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--green), #047857);
+  color: white;
+  border: none;
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="users-page">
+  <div class="users-header">
+    <h2>Users</h2>
+    <button class="add-user-btn" type="button" id="add-user-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Add User
+    </button>
+  </div>
+  
+  <div class="users-table-container">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Last Login</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="users-table-body">
+        <tr>
+          <td colspan="6" class="loading">Loading users...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="add-user-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Create New Account</h2>
+      <button class="modal-close" type="button" id="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="add-user-form">
+        <div class="form-group">
+          <label for="full-name">Full Name</label>
+          <input type="text" id="full-name" placeholder="Enter full name" required>
+        </div>
+        <div="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="user@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="role">Role</label>
+          <select id="role" required>
+            <option value="">Select Role</option>
+            <option value="User">User</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" required>
+            <option value="">Select Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" type="button" id="cancel-btn">Cancel</button>
+      <button class="btn-primary" type="button" id="create-account-btn">Create Account</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll(".nav-item[data-page]").forEach(item => {
+  if (item.dataset.page === "users") {
+    item.classList.add("active");
+  }
+});
+
+// Modal handling
+const addUserBtn = document.getElementById('add-user-btn');
+const modal = document.getElementById('add-user-modal');
+const closeModalBtn = document.getElementById('close-modal');
+const cancelBtn = document.getElementById('cancel-btn');
+
+addUserBtn.addEventListener('click', () => {
+  modal.style.display = 'flex';
+});
+
+const closeModal = () => {
+  modal.style.display = 'none';
+  document.getElementById('add-user-form').reset();
+};
+
+closeModalBtn.addEventListener('click', closeModal);
+cancelBtn.addEventListener('click', closeModal);
+
+// Close modal when clicking outside
+window.addEventListener('click', (e) => {
+  if (e.target === modal) {
+    closeModal();
+  }
+});
+
+// Handle form submission
+document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = {
+    fullName: document.getElementById('full-name').value,
+    email: document.getElementById('email').value,
+    role: document.getElementById('role').value,
+    status: document.getElementById('status').value,
+    password: 'temp123' // Default password, in real app this would be securely generated
+  };
+  
+  try {
+    const response = await fetch('/api/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
+    
+    if (response.ok) {
+      closeModal();
+      loadUsers(); // Refresh the user list
+      alert('User created successfully!');
+    } else {
+      const error = await response.json();
+      alert('Error creating user: ' + (error.detail || 'Unknown error'));
+    }
+  } catch (error) {
+    alert('Error creating user: ' + error.message);
+  }
+});
+
+// Load users from API
+async function loadUsers() {
+  const tbody = document.querySelector('#users-table-body');
+  try {
+    const response = await fetch('/api/users');
+    if (!response.ok) {
+      throw new Error('Failed to fetch users');
+    }
+    const users = await response.json();
+    
+    tbody.innerHTML = '';
+    
+    if (users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6">No users found</td></tr>';
+      return;
+    }
+    
+    users.forEach(user => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${user.FullName || 'N/A'}</td>
+        <td>${user.Email || 'N/A'}</td>
+        <td>${user.Role || 'N/A'}</td>
+        <td>
+          <span class="status-badge ${user.Status === 'Active' ? 'status-active' : 'status-inactive'}">
+            ${user.Status || 'N/A'}
+          </span>
+        </td>
+        <td>${user.LastLogin || 'Never'}</td>
+        <td class="actions-btn">
+          <button class="action-btn edit-btn">Edit</button>
+          <button class="action-btn delete-btn">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error('Error loading users:', error);
+    tbody.innerHTML = '<tr><td colspan="6">Error loading users</td></tr>';
+  }
+}
+
+// Initial load
+loadUsers();
+</script>
+{% endblock %}
