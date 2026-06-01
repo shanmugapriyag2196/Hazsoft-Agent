@@ -337,6 +337,7 @@ def settings(request: Request):
 
 @app.get("/users", response_class=HTMLResponse)
 def users(request: Request):
+    print("Users route accessed")  # Debug line
     return templates.TemplateResponse("users.html", {"request": request})
 
 @app.get("/api/documents")

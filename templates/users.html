@@ -32,10 +32,6 @@
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.2s ease;
 }
-.add-user-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.25);
-}
 .add-user-btn svg {
   width: 18px;
   height: 18px;
@@ -190,7 +186,7 @@
   color: white;
   border: none;
 }
-</script>
+</style>
 {% endblock %}
 
 {% block content %}
@@ -240,7 +236,7 @@
           <label for="full-name">Full Name</label>
           <input type="text" id="full-name" placeholder="Enter full name" required>
         </div>
-        <div="form-group">
+        <div class="form-group">
           <label for="email">Email Address</label>
           <input type="email" id="email" placeholder="user@example.com" required>
         </div>
@@ -370,7 +366,7 @@ async function loadUsers() {
           <button class="action-btn edit-btn">Edit</button>
           <button class="action-btn delete-btn">Delete</button>
         </td>
-      `;
+      `);
       tbody.appendChild(tr);
     });
   } catch (error) {
