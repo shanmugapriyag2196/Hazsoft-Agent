@@ -429,7 +429,7 @@ def api_stats():
 def api_get_users():
     try:
         # For the users table, we need to use a different table ID
-        AIRTABLE_USERS_TABLE_ID = "tbl1E5Pu8DpEAharu"
+        AIRTABLE_USERS_TABLE_ID = os.getenv("AIRTABLE_USER_TABLE_ID", "tbl1E5Pu8DpEAharu")
         if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
             return []
         encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
@@ -503,7 +503,7 @@ def api_create_user(user: UserCreate):
 def api_update_user(user_id: str, user: UserCreate):
     try:
         # For the users table, we need to use a different table ID
-        AIRTABLE_USERS_TABLE_ID = "tbl1E5Pu8DpEAharu"
+        AIRTABLE_USERS_TABLE_ID = os.getenv("AIRTABLE_USER_TABLE_ID", "tbl1E5Pu8DpEAharu")
         if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
             raise HTTPException(status_code=400, detail="Airtable not configured")
         
@@ -525,7 +525,7 @@ def api_update_user(user_id: str, user: UserCreate):
             }
         }
         
-        response = httpx.patch(url, headers=headers, json=payload, timeout=30.0)
+        response = httpx.put(url, headers=headers, json=payload, timeout=30.0)
         response.raise_for_status()
         return response.json()
     except Exception as exc:
@@ -535,7 +535,7 @@ def api_update_user(user_id: str, user: UserCreate):
 def api_delete_user(user_id: str):
     try:
         # For the users table, we need to use a different table ID
-        AIRTABLE_USERS_TABLE_ID = "tbl1E5Pu8DpEAharu"
+        AIRTABLE_USERS_TABLE_ID = os.getenv("AIRTABLE_USER_TABLE_ID", "tbl1E5Pu8DpEAharu")
         if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
             raise HTTPException(status_code=400, detail="Airtable not configured")
         
