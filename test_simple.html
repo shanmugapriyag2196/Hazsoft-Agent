@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Edit Functionality</title>
+    <script>
+        async function testEdit() {
+            // First, create a user to test with
+            const createResponse = await fetch('http://localhost:8000/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fullName: 'Test User',
+                    email: 'test@example.com',
+                    role: 'User',
+                    status: 'Active',
+                    password: 'temp123'
+                })
+            });
+            
+            if (!createResponse.ok) {
+                alert('Failed to create user: ' + createResponse.status);
+                return;
+            }
+            
+            const createdUser = await createResponse.json();
+            const userId = createdUser.id;
+            alert('Created user with ID: ' + userId);
+            
+            // Now test updating that user
+            const updateResponse = await fetch(`http://localhost:8000/api/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fullName: 'Updated User',
+                    email: 'updated@example.com',
+                    role: 'Admin',
+                    status: 'Active',
+                    password: 'updated123'
+                })
+            });
+            
+            if (!updateResponse.ok) {
+                const error = await updateResponse.json();
+                alert('Failed to update user: ' + updateResponse.status + '\n' + JSON.stringify(error));
+                return;
+            }
+            
+            const updatedUser = await updateResponse.json();
+            alert('Successfully updated user!\n' +
+                  'FullName: ' + updatedUser.fields.FullName + '\n' +
+                  'Email: ' + updatedUser.fields.Email + '\n' +
+                  'Role: ' + updatedUser.fields.Role + '\n' +
+                  'Status: ' + updatedUser.fields.Status);
+                  
+            // Verify by getting the user
+            const getResponse = await fetch('http://localhost:8000/api/users');
+            if (!getResponse.ok) {
+                alert('Failed to get users: ' + getResponse.status);
+                return;
+            }
+            
+            const users = await getResponse.json();
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                alert('Verified user data:\n' +
+                      'FullName: ' + user.FullName + '\n' +
+                      'Email: ' + user.Email + '\n' +
+                      'Role: ' + user.Role + '\n' +
+                      'Status: ' + user.Status);
+            } else {
+                alert('Could not find user with ID: ' + userId);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Test Edit Functionality</h1>
+    <button onclick="testEdit()">Test Create -> Update -> Verify</button>
+</body>
+</html>
