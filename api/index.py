@@ -483,12 +483,69 @@ def api_create_user(user: UserCreate):
                 "Email": user.email,
                 "Role": user.role,
                 "Status": user.status,
-                "Password": user.password,
-                "Last Login": datetime.datetime.now().isoformat()  # Set last login to now
+                "Password": user.password
             }
         }
         
+        # Debug: Print the payload
+        print(f"Sending payload to Airtable: {payload}")
+        
         response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
+        print(f"Airtable response status: {response.status_code}")
+        print(f"Airtable response text: {response.text}")
+        response.raise_for_status()
+        return response.json()
+    except Exception as exc:
+        print(f"Error in api_create_user: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@app.put("/api/users/{user_id}")
+def api_update_user(user_id: str, user: UserCreate):
+    try:
+        # For the users table, we need to use a different table ID
+        AIRTABLE_USERS_TABLE_ID = "tbl1E5Pu8DpEAharu"
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
+            raise HTTPException(status_code=400, detail="Airtable not configured")
+        
+        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}/{user_id}"
+        headers = {
+            "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        
+        # Prepare the payload for Airtable
+        payload = {
+            "fields": {
+                "FullName": user.fullName,
+                "Email": user.email,
+                "Role": user.role,
+                "Status": user.status,
+                "Password": user.password
+            }
+        }
+        
+        response = httpx.patch(url, headers=headers, json=payload, timeout=30.0)
+        response.raise_for_status()
+        return response.json()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@app.delete("/api/users/{user_id}")
+def api_delete_user(user_id: str):
+    try:
+        # For the users table, we need to use a different table ID
+        AIRTABLE_USERS_TABLE_ID = "tbl1E5Pu8DpEAharu"
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
+            raise HTTPException(status_code=400, detail="Airtable not configured")
+        
+        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}/{user_id}"
+        headers = {
+            "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+        }
+        
+        response = httpx.delete(url, headers=headers, timeout=30.0)
         response.raise_for_status()
         return response.json()
     except Exception as exc:

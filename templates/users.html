@@ -261,6 +261,50 @@
     <div class="modal-footer">
       <button class="btn-secondary" type="button" id="cancel-btn">Cancel</button>
       <button class="btn-primary" type="button" id="create-account-btn">Create Account</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="edit-user-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Edit User</h2>
+      <button class="modal-close" type="button" id="edit-close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="edit-user-form">
+        <input type="hidden" id="edit-user-id">
+        <div class="form-group">
+          <label for="edit-full-name">Full Name</label>
+          <input type="text" id="edit-full-name" placeholder="Enter full name" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-email">Email Address</label>
+          <input type="email" id="edit-email" placeholder="user@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-role">Role</label>
+          <select id="edit-role" required>
+            <option value="">Select Role</option>
+            <option value="User">User</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-status">Status</label>
+          <select id="edit-status" required>
+            <option value="">Select Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" type="button" id="edit-cancel-btn">Cancel</button>
+      <button class="btn-primary" type="button" id="edit-save-btn">Save Changes</button>
     </div>
   </div>
 </div>
@@ -276,30 +320,57 @@ document.querySelectorAll(".nav-item[data-page]").forEach(item => {
 
 // Modal handling
 const addUserBtn = document.getElementById('add-user-btn');
-const modal = document.getElementById('add-user-modal');
-const closeModalBtn = document.getElementById('close-modal');
-const cancelBtn = document.getElementById('cancel-btn');
+const addModal = document.getElementById('add-user-modal');
+const addCloseModalBtn = document.getElementById('close-modal');
+const addCancelBtn = document.getElementById('cancel-btn');
 
+const editModal = document.getElementById('edit-user-modal');
+const editCloseModalBtn = document.getElementById('edit-close-modal');
+const editCancelBtn = document.getElementById('edit-cancel-btn');
+const editSaveBtn = document.getElementById('edit-save-btn');
+
+// Add User Modal
 addUserBtn.addEventListener('click', () => {
-  modal.style.display = 'flex';
+  addModal.style.display = 'flex';
 });
 
-const closeModal = () => {
-  modal.style.display = 'none';
+const closeAddModal = () => {
+  addModal.style.display = 'none';
   document.getElementById('add-user-form').reset();
 };
 
-closeModalBtn.addEventListener('click', closeModal);
-cancelBtn.addEventListener('click', closeModal);
+addCloseModalBtn.addEventListener('click', closeAddModal);
+addCancelBtn.addEventListener('click', closeAddModal);
 
-// Close modal when clicking outside
+// Edit User Modal
+const openEditModal = (userId, userData) => {
+  document.getElementById('edit-user-id').value = userId;
+  document.getElementById('edit-full-name').value = userData.FullName || '';
+  document.getElementById('edit-email').value = userData.Email || '';
+  document.getElementById('edit-role').value = userData.Role || '';
+  document.getElementById('edit-status').value = userData.Status || '';
+  editModal.style.display = 'flex';
+};
+
+const closeEditModal = () => {
+  editModal.style.display = 'none';
+  document.getElementById('edit-user-form').reset();
+};
+
+editCloseModalBtn.addEventListener('click', closeEditModal);
+editCancelBtn.addEventListener('click', closeEditModal);
+
+// Close modals when clicking outside
 window.addEventListener('click', (e) => {
-  if (e.target === modal) {
-    closeModal();
+  if (e.target === addModal) {
+    closeAddModal();
+  }
+  if (e.target === editModal) {
+    closeEditModal();
   }
 });
 
-// Handle form submission
+// Handle form submission for adding user
 document.getElementById('add-user-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   
@@ -321,7 +392,7 @@ document.getElementById('add-user-form').addEventListener('submit', async (e) =>
     });
     
     if (response.ok) {
-      closeModal();
+      closeAddModal();
       loadUsers(); // Refresh the user list
       alert('User created successfully!');
     } else {
@@ -330,6 +401,46 @@ document.getElementById('add-user-form').addEventListener('submit', async (e) =>
     }
   } catch (error) {
     alert('Error creating user: ' + error.message);
+  }
+});
+
+// Handle form submission for editing user
+document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const userId = document.getElementById('edit-user-id').value;
+  if (!userId) {
+    alert('User ID is missing');
+    return;
+  }
+  
+  const formData = {
+    fullName: document.getElementById('edit-full-name').value,
+    email: document.getElementById('edit-email').value,
+    role: document.getElementById('edit-role').value,
+    status: document.getElementById('edit-status').value,
+    password: 'temp123' // Default password, in real app this would be securely generated
+  };
+  
+  try {
+    const response = await fetch(`/api/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
+    
+    if (response.ok) {
+      closeEditModal();
+      loadUsers(); // Refresh the user list
+      alert('User updated successfully!');
+    } else {
+      const error = await response.json();
+      alert('Error updating user: ' + (error.detail || 'Unknown error'));
+    }
+  } catch (error) {
+    alert('Error updating user: ' + error.message);
   }
 });
 
@@ -363,15 +474,55 @@ async function loadUsers() {
         </td>
         <td>${user.LastLogin || 'Never'}</td>
         <td class="actions-btn">
-          <button class="action-btn edit-btn">Edit</button>
-          <button class="action-btn delete-btn">Delete</button>
+          <button class="action-btn edit-btn" data-id="${user.id}">Edit</button>
+          <button class="action-btn delete-btn" data-id="${user.id}">Delete</button>
         </td>
-      `);
+      `;
       tbody.appendChild(tr);
+    });
+    
+    // Add event listeners to edit and delete buttons
+    document.querySelectorAll('.edit-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const userId = button.getAttribute('data-id');
+        // Find the user data from the users array
+        const user = users.find(u => u.id === userId);
+        if (user) {
+          openEditModal(userId, user);
+        }
+      });
+    });
+    
+    document.querySelectorAll('.delete-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const userId = button.getAttribute('data-id');
+        if (confirm('Are you sure you want to delete this user?')) {
+          deleteUser(userId);
+        }
+      });
     });
   } catch (error) {
     console.error('Error loading users:', error);
     tbody.innerHTML = '<tr><td colspan="6">Error loading users</td></tr>';
+  }
+}
+
+// Delete user
+async function deleteUser(userId) {
+  try {
+    const response = await fetch(`/api/users/${userId}`, {
+      method: 'DELETE'
+    });
+    
+    if (response.ok) {
+      loadUsers(); // Refresh the user list
+      alert('User deleted successfully!');
+    } else {
+      const error = await response.json();
+      alert('Error deleting user: ' + (error.detail || 'Unknown error'));
+    }
+  } catch (error) {
+    alert('Error deleting user: ' + error.message);
   }
 }
 
