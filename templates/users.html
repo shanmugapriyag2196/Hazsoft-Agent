@@ -344,12 +344,14 @@ addCancelBtn.addEventListener('click', closeAddModal);
 
 // Edit User Modal
 const openEditModal = (userId, userData) => {
-  document.getElementById('edit-user-id').value = userId;
-  document.getElementById('edit-full-name').value = userData.FullName || '';
-  document.getElementById('edit-email').value = userData.Email || '';
-  document.getElementById('edit-role').value = userData.Role || '';
-  document.getElementById('edit-status').value = userData.Status || '';
-  editModal.style.display = 'flex';
+    alert('Opening edit modal for user ID: ' + userId);
+    document.getElementById('edit-user-id').value = userId;
+    document.getElementById('edit-full-name').value = userData.FullName || '';
+    document.getElementById('edit-email').value = userData.Email || '';
+    document.getElementById('edit-role').value = userData.Role || '';
+    document.getElementById('edit-status').value = userData.Status || '';
+    editModal.style.display = 'flex';
+    alert('Edit modal displayed');
 };
 
 const closeEditModal = () => {
@@ -406,42 +408,53 @@ document.getElementById('add-user-form').addEventListener('submit', async (e) =>
 
 // Handle form submission for editing user
 document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  const userId = document.getElementById('edit-user-id').value;
-  if (!userId) {
-    alert('User ID is missing');
-    return;
-  }
-  
-  const formData = {
-    fullName: document.getElementById('edit-full-name').value,
-    email: document.getElementById('edit-email').value,
-    role: document.getElementById('edit-role').value,
-    status: document.getElementById('edit-status').value,
-    password: 'temp123' // Default password, in real app this would be securely generated
-  };
-  
-  try {
-    const response = await fetch(`/api/users/${userId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    });
-    
-    if (response.ok) {
-      closeEditModal();
-      loadUsers(); // Refresh the user list
-      alert('User updated successfully!');
-    } else {
-      const error = await response.json();
-      alert('Error updating user: ' + (error.detail || 'Unknown error'));
+    try {
+        e.preventDefault();
+        alert('Form submission started');
+        
+        const userId = document.getElementById('edit-user-id').value;
+        alert('User ID retrieved: ' + userId);
+        if (!userId) {
+            alert('User ID is missing');
+            return;
+        }
+        
+        const formData = {
+            fullName: document.getElementById('edit-full-name').value,
+            email: document.getElementById('edit-email').value,
+            role: document.getElementById('edit-role').value,
+            status: document.getElementById('edit-status').value,
+            password: 'temp123' // Default password, in real app this would be securely generated
+        };
+        alert('Form data prepared');
+        
+        try {
+            alert('About to make fetch request');
+            const response = await fetch(`/api/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            alert('Fetch request completed, status: ' + response.status);
+            
+            if (response.ok) {
+                alert('Response is ok');
+                closeEditModal();
+                loadUsers(); // Refresh the user list
+                alert('User updated successfully!');
+            } else {
+                alert('Response is not ok');
+                const error = await response.json();
+                alert('Error updating user: ' + (error.detail || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Error in fetch request: ' + error.message);
+        }
+    } catch (error) {
+        alert('Error in edit form submission: ' + error.message);
     }
-  } catch (error) {
-    alert('Error updating user: ' + error.message);
-  }
 });
 
 // Load users from API
@@ -525,6 +538,11 @@ async function deleteUser(userId) {
     alert('Error deleting user: ' + error.message);
   }
 }
+ 
+// Global error handler to catch uncaught exceptions
+window.addEventListener('error', function(e) {
+    alert('JavaScript Error: ' + e.message + '\nFile: ' + e.filename + '\nLine: ' + e.lineno);
+});
 
 // Initial load
 loadUsers();
