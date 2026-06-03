@@ -163,14 +163,12 @@
       gap: 20px;
     }
      {% block styles %}{% endblock %}
-     <style>
-       .is-auth .shell {
-         grid-template-columns: minmax(0, 1fr) !important;
-       }
-       .is-auth aside {
-         display: none !important;
-       }
-     </style>
+      .is-auth .shell {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+      .is-auth aside {
+        display: none !important;
+      }
   </style>
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -179,105 +177,106 @@
     <div class="brand"><span class="brand-mark">H</span><span>Hazsoft Agent</span></div>
     <nav aria-label="SDS navigation">
       <button class="nav-item active" data-page="main" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2 2z"></path><path d="M9 22V12h6v10"></path></svg>
         All SDS
       </button>
       <button class="nav-item" data-page="agent" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 0-7.18 17.62l.19.18H9l3 3 3-3h4.01l.19-.18A10 10 0 0 0 12 2z"></path><path d="M12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"></path></svg>
         AI Agent
       </button>
-<button class="nav-item" data-page="documents" type="button">
-         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></svg>
-         My Documents
-       </button>
-       <button class="nav-item" data-page="users" type="button">
-         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4a9 9 0 0 1 9 9v3h-3v-3a4 4 0 0 0-8 0v3h-3v-3a9 9 0 0 1-9-9zM12 7a3 3 0 0 0 0 6 3 3 0 0 1 6 0v-3a3 3 0 0 0-6 0z"></path></svg>
-         Users
-       </button>
-        <button class="nav-item" data-page="settings" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1 2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 .33 1.82H9a1.65 1.65 0 0 0-1 1.51V21a2 2 2 2 0 0 1 2-2h-.09a1.65 1.65 0 0 0-1.51-1z"></path></svg>
-          Settings
+    <button class="nav-item" data-page="documents" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"></path><path d="M14 2v6h6"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></svg>
+          My Documents
         </button>
-      </nav>
-    <div class="sidebar-foot">
-      <strong>Connected</strong>
-      Ask about safety documents, hazards, PPE, storage.
-    </div>
-  </aside>
+        <button class="nav-item" data-page="users" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4a9 9 0 0 1 9 9v3h-3v-3a4 4 0 0 0-8 0v3h-3v-3a9 9 0 0 1-9-9zM12 7a3 3 0 0 0 0 6 3 3 0 0 1 6 0v-3a3 3 0 0 0-6 0z"></path></svg>
+          Users
+        </button>
+         <button class="nav-item" data-page="settings" type="button">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1 2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 .33 1.82H9a1.65 1.65 0 0 0-1 1.51V21a2 2 2 2 0 0 1 2-2h-.09a1.65 1.65 0 0 0-1.51-1z"></path></svg>
+           Settings
+         </button>
+       </nav>
+     </div>
+     <div class="sidebar-foot">
+       <strong>Connected</strong>
+       Ask about safety documents, hazards, PPE, storage.
+     </div>
+   </aside>
 
-  <main class="main">
-    {% block content %}{% endblock %}
-  </main>
+   <main class="main">
+     {% block content %}{% endblock %}
+   </main>
 
-  {% block agent_sidebar %}{% endblock %}
-</div>
+   {% block agent_sidebar %}{% endblock %}
+ </div>
 
-{% block scripts %}{% endblock %}
-<script>
-// Authentication functions
-function isAuthenticated() {
-  return localStorage.getItem('hazsoft_token') !== null;
-}
+ {% block scripts %}{% endblock %}
+ <script>
+ // Authentication functions
+ function isAuthenticated() {
+   return localStorage.getItem('hazsoft_token') !== null;
+ }
 
-function getCurrentUser() {
-  const userJson = localStorage.getItem('hazsoft_user');
-  return userJson ? JSON.parse(userJson) : null;
-}
+ function getCurrentUser() {
+   const userJson = localStorage.getItem('hazsoft_user');
+   return userJson ? JSON.parse(userJson) : null;
+ }
 
-function setAuth(token, user) {
-  localStorage.setItem('hazsoft_token', token);
-  localStorage.setItem('hazsoft_user', JSON.stringify(user));
-}
+ function setAuth(token, user) {
+   localStorage.setItem('hazsoft_token', token);
+   localStorage.setItem('hazsoft_user', JSON.stringify(user));
+ }
 
-function clearAuth() {
-  localStorage.removeItem('hazsoft_token');
-  localStorage.removeItem('hazsoft_user');
-}
+ function clearAuth() {
+   localStorage.removeItem('hazsoft_token');
+   localStorage.removeItem('hazsoft_user');
+ }
 
-// Check auth on page load
-document.addEventListener('DOMContentLoaded', function() {
-  const path = window.location.pathname;
-  
-  // Pages that don't require authentication
-  const publicPaths = ['/signin', '/signup'];
-  
-  if (!isAuthenticated() && !publicPaths.includes(path)) {
-    // Redirect to sign in if not on public page
-    window.location.href = '/signin';
-  }
-  
-  // Update nav items based on auth status
-  const navItems = document.querySelectorAll('.nav-item[data-page]');
-  navItems.forEach(item => {
-    const page = item.dataset.page;
-    // Hide certain pages if not authenticated
-    if (['users', 'settings', 'documents', 'agent'].includes(page) && !isAuthenticated()) {
-      item.style.display = 'none';
-    } else {
-      item.style.display = 'flex';
-    }
-  });
-});
+ // Check auth on page load
+ document.addEventListener('DOMContentLoaded', function() {
+   const path = window.location.pathname;
+   
+   // Pages that don't require authentication
+   const publicPaths = ['/signin', '/signup'];
+   
+   if (!isAuthenticated() && !publicPaths.includes(path)) {
+     // Redirect to sign in if not on public page
+     window.location.href = '/signin';
+   }
+   
+   // Update nav items based on auth status
+   const navItems = document.querySelectorAll('.nav-item[data-page]');
+   navItems.forEach(item => {
+     const page = item.dataset.page;
+     // Hide certain pages if not authenticated
+     if (['users', 'settings', 'documents', 'agent'].includes(page) && !isAuthenticated()) {
+       item.style.display = 'none';
+     } else {
+       item.style.display = 'flex';
+     }
+   });
+ });
 
-// Navigation
-document.querySelectorAll(".nav-item[data-page]").forEach(item => {
-  const page = item.dataset.page;
-  item.addEventListener("click", () => {
-    document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
-    item.classList.add("active");
-    if (page === "agent") {
-      window.location.href = "/agent";
-    } else if (page === "main") {
-      window.location.href = "/";
-    } else if (page === "documents") {
-      window.location.href = "/documents";
-    } else if (page === "users") {
-      window.location.href = "/users";
-    } else if (page === "settings") {
-      window.location.href = "/settings";
-    }
-  });
-});
-</script>
+ // Navigation
+ document.querySelectorAll(".nav-item[data-page]").forEach(item => {
+   const page = item.dataset.page;
+   item.addEventListener("click", () => {
+     document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+     item.classList.add("active");
+     if (page === "agent") {
+       window.location.href = "/agent";
+     } else if (page === "main") {
+       window.location.href = "/";
+     } else if (page === "documents") {
+       window.location.href = "/documents";
+     } else if (page === "users") {
+       window.location.href = "/users";
+     } else if (page === "settings") {
+       window.location.href = "/settings";
+     }
+   });
+ });
+ </script>
 </body>
 </html>
