@@ -1,6 +1,6 @@
 INFO:     Will watch for changes in these directories: ['C:\\Users\\priyag\\Documents\\Hazsoft Agent']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [94816] using WatchFiles
-INFO:     Started server process [218484]
+INFO:     Started reloader process [43092] using WatchFiles
+INFO:     Started server process [193360]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.

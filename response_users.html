@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Users - Hazsoft Agent</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f0f4f9;
+      --panel: #ffffff;
+      --panel-glass: rgba(255, 255, 255, 0.88);
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --nav: #0b1f33;
+      --nav-soft: #143553;
+      --green: #059669;
+      --amber: #d97706;
+      --red: #dc2626;
+      --blue: #2563eb;
+      --teal: #0d9488;
+      --purple: #7c3aed;
+      --sky: #0ea5e9;
+      --indigo: #4f46e5;
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 25px 60px rgba(15, 23, 42, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background:
+        radial-gradient(circle at 15% 25%, rgba(5, 150, 105, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(37, 99, 235, 0.06) 0%, transparent 40%),
+        var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 20px;
+      padding: 20px;
+    }
+    .shell.has-agent {
+      grid-template-columns: 280px minmax(0, 1fr) 320px;
+    }
+    aside {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 25, 1));
+      color: #ffffff;
+      border-radius: 20px;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    aside::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      padding: 0 4px;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #ffffff, #e2e8f0);
+      color: var(--nav);
+      font-weight: 900;
+      font-size: 18px;
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+    }
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .nav-item {
+      border: 0;
+      border-radius: 14px;
+      background: transparent;
+      color: #cbd5e1;
+      min-height: 48px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-item::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transition: background 0.2s ease;
+    }
+    .nav-item.active,
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      transform: translateX(4px);
+    }
+    .nav-item.active::before {
+      background: #34d399;
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.3);
+    }
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      opacity: 0.7;
+    }
+    .sidebar-foot {
+      margin-top: auto;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 18px;
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.5;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+    }
+    .sidebar-foot strong {
+      display: block;
+      color: #ffffff;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .main {
+      min-width: 0;
+      padding: 4px 0 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+.users-page {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.users-header h2 {
+  margin: 0;
+  color: var(--ink);
+}
+.add-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, var(--green), #047857);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.add-user-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+.add-user-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.users-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.users-table th {
+  text-align: left;
+  padding: 16px 20px;
+  background: #f8fafc;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 2px solid var(--line);
+}
+.users-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+.users-table tr:last-child td {
+  border-bottom: none;
+}
+.users-table tr:hover {
+  background: #f1f5f9;
+}
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.status-active {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+}
+.status-inactive {
+  background: rgba(220, 38, 38, 0.2);
+  color: #dc2626;
+}
+.actions-btn {
+  display: flex;
+  gap: 8px;
+}
+.action-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+}
+.edit-btn {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--blue);
+}
+.delete-btn {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--red);
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.modal-header h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 20px;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.modal-close:hover {
+  background: rgba(0,0,0,0.05);
+}
+.modal-body {
+  padding: 24px;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+}
+.form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid var(--line);
+}
+.btn-secondary {
+  background: rgba(0,0,0,0.05);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--green), #047857);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+</style>
+
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand"><span class="brand-mark">H</span><span>Hazsoft Agent</span></div>
+    <nav aria-label="SDS navigation">
+      <button class="nav-item active" data-page="main" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg>
+        All SDS
+      </button>
+      <button class="nav-item" data-page="agent" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 0-7.18 17.62l.19.18H9l3 3 3-3h4.01l.19-.18A10 10 0 0 0 12 2z"></path><path d="M12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"></path></svg>
+        AI Agent
+      </button>
+<button class="nav-item" data-page="documents" type="button">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></svg>
+         My Documents
+       </button>
+       <button class="nav-item" data-page="users" type="button">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4a9 9 0 0 1 9 9v3h-3v-3a4 4 0 0 0-8 0v3h-3v-3a9 9 0 0 1-9-9zM12 7a3 3 0 0 0 0 6 3 3 0 0 1 6 0v-3a3 3 0 0 0-6 0z"></path></svg>
+         Users
+       </button>
+        <button class="nav-item" data-page="settings" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1 2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 .33 1.82H9a1.65 1.65 0 0 0-1 1.51V21a2 2 2 2 0 0 1 2-2h-.09a1.65 1.65 0 0 0-1.51-1z"></path></svg>
+          Settings
+        </button>
+      </nav>
+    <div class="sidebar-foot">
+      <strong>Connected</strong>
+      Ask about safety documents, hazards, PPE, storage.
+    </div>
+  </aside>
+
+  <main class="main">
+    
+<div class="users-page">
+  <div class="users-header">
+    <h2>Users</h2>
+    <button class="add-user-btn" id="add-user-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="12" y2="19"></line>
+      </svg>
+      Add User
+    </button>
+  </div>
+  
+  <div class="users-table-container">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="users-table-body">
+        <tr>
+          <td colspan="4" class="loading">Loading users...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="add-user-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Add New User</h2>
+      <button class="modal-close" id="close-add-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="add-user-form">
+        <div class="form-group">
+          <label for="add-full-name">Full Name</label>
+          <input type="text" id="add-full-name" placeholder="Enter full name" required>
+        </div>
+        <div class="form-group">
+          <label for="add-email">Email Address</label>
+          <input type="email" id="add-email" placeholder="user@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="add-role">Role</label>
+          <select id="add-role" required>
+            <option value="">Select Role</option>
+            <option value="User">User</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="add-status">Status</label>
+          <select id="add-status" required>
+            <option value="">Select Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="add-cancel-btn" type="button">Cancel</button>
+      <button class="btn-primary" id="add-save-btn">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="edit-user-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Edit User</h2>
+      <button class="modal-close" id="edit-close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="edit-user-form">
+        <input type="hidden" id="edit-user-id">
+        <div class="form-group">
+          <label for="edit-full-name">Full Name</label>
+          <input type="text" id="edit-full-name" placeholder="Enter full name" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-email">Email Address</label>
+          <input type="email" id="edit-email" placeholder="user@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-role">Role</label>
+          <select id="edit-role" required>
+            <option value="">Select Role</option>
+            <option value="User">User</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-status">Status</label>
+          <select id="edit-status" required>
+            <option value="">Select Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="edit-cancel-btn" type="button">Cancel</button>
+      <button class="btn-primary" id="edit-save-btn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+  </main>
+
+  
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Set active nav item
+  document.querySelectorAll(".nav-item[data-page]").forEach(item => {
+    if (item.dataset.page === "users") {
+      item.classList.add("active");
+    }
+  });
+  
+  // Modal elements
+  const addUserBtn = document.getElementById('add-user-btn');
+  const addModal = document.getElementById('add-user-modal');
+  const closeAddModalBtn = document.getElementById('close-add-modal');
+  const addCancelBtn = document.getElementById('add-cancel-btn');
+  const addSaveBtn = document.getElementById('add-save-btn');
+  const addUserForm = document.getElementById('add-user-form');
+  
+  const editModal = document.getElementById('edit-user-modal');
+  const editCloseModalBtn = document.getElementById('edit-close-modal');
+  const editCancelBtn = document.getElementById('edit-cancel-btn');
+  const editSaveBtn = document.getElementById('edit-save-btn');
+  const editUserForm = document.getElementById('edit-user-form');
+  
+  // Add User Modal
+  addUserBtn.addEventListener('click', () => {
+    addModal.style.display = 'flex';
+  });
+  
+  const closeAddModal = () => {
+    addModal.style.display = 'none';
+    addUserForm.reset();
+  };
+  
+  closeAddModalBtn.addEventListener('click', closeAddModal);
+  addCancelBtn.addEventListener('click', closeAddModal);
+  
+  // Edit User Modal
+  const openEditModal = (userId, userData) => {
+    document.getElementById('edit-user-id').value = userId;
+    document.getElementById('edit-full-name').value = userData.FullName || '';
+    document.getElementById('edit-email').value = userData.Email || '';
+    document.getElementById('edit-role').value = userData.Role || '';
+    document.getElementById('edit-status').value = userData.Status || '';
+    editModal.style.display = 'flex';
+  };
+  
+  const closeEditModal = () => {
+    editModal.style.display = 'none';
+    editUserForm.reset();
+  };
+  
+  editCloseModalBtn.addEventListener('click', closeEditModal);
+  editCancelBtn.addEventListener('click', closeEditModal);
+  
+  // Close modals when clicking outside
+  window.addEventListener('click', (e) => {
+    if (e.target === addModal) {
+      closeAddModal();
+    }
+    if (e.target === editModal) {
+      closeEditModal();
+    }
+  });
+  
+  // Handle form submission for adding user
+  addUserForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+      fullName: document.getElementById('add-full-name').value,
+      email: document.getElementById('add-email').value,
+      role: document.getElementById('add-role').value,
+      status: document.getElementById('add-status').value,
+      password: 'temp123' // Default password
+    };
+    
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        closeAddModal();
+        loadUsers();
+        alert('User created successfully!');
+      } else {
+        const error = await response.json();
+        alert('Error creating user: ' + (error.detail || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error creating user: ' + error.message);
+    }
+  });
+  
+  // Handle form submission for editing user
+  editUserForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const userId = document.getElementById('edit-user-id').value;
+    if (!userId) {
+      alert('User ID is missing');
+      return;
+    }
+    
+    const formData = {
+      fullName: document.getElementById('edit-full-name').value,
+      email: document.getElementById('edit-email').value,
+      role: document.getElementById('edit-role').value,
+      status: document.getElementById('edit-status').value,
+      password: 'temp123' // Default password
+    };
+    
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        closeEditModal();
+        loadUsers();
+        alert('User updated successfully!');
+      } else {
+        const error = await response.json();
+        alert('Error updating user: ' + (error.detail || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error updating user: ' + error.message);
+    }
+  });
+  
+  // Load users from API
+  async function loadUsers() {
+    const tbody = document.querySelector('#users-table-body');
+    try {
+      const response = await fetch('/api/users');
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      const users = await response.json();
+      
+      tbody.innerHTML = '';
+      
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">No users found</td></tr>';
+        return;
+      }
+      
+      users.forEach(user => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${user.FullName || 'N/A'}</td>
+          <td>${user.Email || 'N/A'}</td>
+          <td>${user.Role || 'N/A'}</td>
+          <td>
+            <span class="status-badge ${user.Status === 'Active' ? 'status-active' : 'status-inactive'}">
+              ${user.Status || 'N/A'}
+            </span>
+          </td>
+          <td class="actions-btn">
+            <button class="action-btn edit-btn" data-id="${user.id}">Edit</button>
+            <button class="action-btn delete-btn" data-id="${user.id}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      // Add event listeners to edit and delete buttons
+      document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', () => {
+          const userId = button.getAttribute('data-id');
+          // Find the user data from the users array
+          const user = users.find(u => u.id === userId);
+          if (user) {
+            openEditModal(userId, user);
+          }
+        });
+      });
+      
+      document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', () => {
+          const userId = button.getAttribute('data-id');
+          if (confirm('Are you sure you want to delete this user?')) {
+            deleteUser(userId);
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Error loading users:', error);
+      tbody.innerHTML = '<tr><td colspan="4">Error loading users</td></tr>';
+    }
+  }
+  
+  // Delete user
+  async function deleteUser(userId) {
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        loadUsers();
+        alert('User deleted successfully!');
+      } else {
+        const error = await response.json();
+        alert('Error deleting user: ' + (error.detail || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error deleting user: ' + error.message);
+    }
+  }
+  
+  // Initial load
+  loadUsers();
+});
+</script>
+
+<script>
+// Authentication functions
+function isAuthenticated() {
+  return localStorage.getItem('hazsoft_token') !== null;
+}
+
+function getCurrentUser() {
+  const userJson = localStorage.getItem('hazsoft_user');
+  return userJson ? JSON.parse(userJson) : null;
+}
+
+function setAuth(token, user) {
+  localStorage.setItem('hazsoft_token', token);
+  localStorage.setItem('hazsoft_user', JSON.stringify(user));
+}
+
+function clearAuth() {
+  localStorage.removeItem('hazsoft_token');
+  localStorage.removeItem('hazsoft_user');
+}
+
+// Check auth on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  
+  // Pages that don't require authentication
+  const publicPaths = ['/signin', '/signup'];
+  
+  if (!isAuthenticated() && !publicPaths.includes(path)) {
+    // Redirect to sign in if not on public page
+    window.location.href = '/signin';
+  }
+  
+  // Update nav items based on auth status
+  const navItems = document.querySelectorAll('.nav-item[data-page]');
+  navItems.forEach(item => {
+    const page = item.dataset.page;
+    // Hide certain pages if not authenticated
+    if (['users', 'settings', 'documents', 'agent'].includes(page) && !isAuthenticated()) {
+      item.style.display = 'none';
+    } else {
+      item.style.display = 'flex';
+    }
+  });
+});
+
+// Navigation
+document.querySelectorAll(".nav-item[data-page]").forEach(item => {
+  const page = item.dataset.page;
+  item.addEventListener("click", () => {
+    document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+    item.classList.add("active");
+    if (page === "agent") {
+      window.location.href = "/agent";
+    } else if (page === "main") {
+      window.location.href = "/";
+    } else if (page === "documents") {
+      window.location.href = "/documents";
+    } else if (page === "users") {
+      window.location.href = "/users";
+    } else if (page === "settings") {
+      window.location.href = "/settings";
+    }
+  });
+});
+</script>
+</body>
+</html>

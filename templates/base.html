@@ -206,6 +206,52 @@
 
 {% block scripts %}{% endblock %}
 <script>
+// Authentication functions
+function isAuthenticated() {
+  return localStorage.getItem('hazsoft_token') !== null;
+}
+
+function getCurrentUser() {
+  const userJson = localStorage.getItem('hazsoft_user');
+  return userJson ? JSON.parse(userJson) : null;
+}
+
+function setAuth(token, user) {
+  localStorage.setItem('hazsoft_token', token);
+  localStorage.setItem('hazsoft_user', JSON.stringify(user));
+}
+
+function clearAuth() {
+  localStorage.removeItem('hazsoft_token');
+  localStorage.removeItem('hazsoft_user');
+}
+
+// Check auth on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  
+  // Pages that don't require authentication
+  const publicPaths = ['/signin', '/signup'];
+  
+  if (!isAuthenticated() && !publicPaths.includes(path)) {
+    // Redirect to sign in if not on public page
+    window.location.href = '/signin';
+  }
+  
+  // Update nav items based on auth status
+  const navItems = document.querySelectorAll('.nav-item[data-page]');
+  navItems.forEach(item => {
+    const page = item.dataset.page;
+    // Hide certain pages if not authenticated
+    if (['users', 'settings', 'documents', 'agent'].includes(page) && !isAuthenticated()) {
+      item.style.display = 'none';
+    } else {
+      item.style.display = 'flex';
+    }
+  });
+});
+
+// Navigation
 document.querySelectorAll(".nav-item[data-page]").forEach(item => {
   const page = item.dataset.page;
   item.addEventListener("click", () => {

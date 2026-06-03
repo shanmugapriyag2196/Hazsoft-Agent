@@ -302,16 +302,8 @@
          Users
        </button>
         <button class="nav-item" data-page="settings" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1 2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0-.33-1.82l.06.06a1.65 1.65 0 0 0 .33 1.82H9a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1 2 2 2 2 0 0 1 2-2h-.09a1.65 1.65 0 0 0-1.51-1z"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1 2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 .33 1.82H9a1.65 1.65 0 0 0-1 1.51V21a2 2 2 2 0 0 1 2-2h-.09a1.65 1.65 0 0 0-1.51-1z"></path></svg>
           Settings
-        </button>
-        <button class="nav-item" data-page="signin" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.27c-1.8 0-3.26.85-4.05 2.07-.8-1.22-2.25-2.07-4.05-2.07A4 4 0 003 7.27V22h18V7.27c0-1.92-1.16-3.6-2.91-4.73zM12 15a3 3 0 100-6 3 3 0 000 6z"></path></svg>
-          Sign In
-        </button>
-        <button class="nav-item" data-page="signup" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2c-1.1 0-2 .9-2 2h1v2h-2V4c0-1.1-.9-2-2-2h-2V2h4zm1 15h-2v-2h2v-2h-2v-2H8v2H6v2h2v2h-2v2H4v2h2v2h2v2h2v-2h2v2h2v-2h2v-2h2V9h2v2h2v-2h2v-2h2V5l2 2z"/></svg>
-          Sign Up
         </button>
       </nav>
     <div class="sidebar-foot">
@@ -356,12 +348,16 @@
     </button>
   </form>
   
-  <div class="links">
-    <p>Don't have an account? <a href="/signup" id="signup-link">Sign Up</a></p>
-    <br>
-    <p><a href="/forgot-password" id="forgot-link">Forgot Password?</a></p>
+    <div class="links">
+      <p>Don't have an account? <a href="/signup" id="signup-link">Sign Up</a></p>
+      <br>
+      <p><a href="/forgot-password" id="forgot-link">Forgot Password?</a></p>
     </div>
+  </div>
+</form>
 </div>
+</div>
+
 
   </main>
 
@@ -370,6 +366,109 @@
 
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('signin-form');
+  const emailError = document.getElementById('email-error');
+  const passwordError = document.getElementById('password-error');
+  const submitBtn = document.getElementById('submit-btn');
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Clear errors
+    emailError.textContent = '';
+    passwordError.textContent = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in...';
+    
+    const formData = {
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value
+    };
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        // Store user data (in a real app, you'd store a JWT token)
+        localStorage.setItem('hazsoft_user', JSON.stringify(userData));
+        localStorage.setItem('hazsoft_token', 'dummy-token'); // For demo
+        
+        // Redirect to dashboard
+        window.location.href = '/';
+      } else {
+        const error = await response.json();
+        if (error.detail === 'Invalid email or password') {
+          emailError.textContent = 'Invalid email or password';
+          passwordError.textContent = 'Invalid email or password';
+        } else {
+          emailError.textContent = error.detail || 'Authentication failed';
+        }
+      }
+    } catch (error) {
+      emailError.textContent = 'Network error. Please try again.';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+    }
+  });
+});
+</script>
+
+<script>
+// Authentication functions
+function isAuthenticated() {
+  return localStorage.getItem('hazsoft_token') !== null;
+}
+
+function getCurrentUser() {
+  const userJson = localStorage.getItem('hazsoft_user');
+  return userJson ? JSON.parse(userJson) : null;
+}
+
+function setAuth(token, user) {
+  localStorage.setItem('hazsoft_token', token);
+  localStorage.setItem('hazsoft_user', JSON.stringify(user));
+}
+
+function clearAuth() {
+  localStorage.removeItem('hazsoft_token');
+  localStorage.removeItem('hazsoft_user');
+}
+
+// Check auth on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  
+  // Pages that don't require authentication
+  const publicPaths = ['/signin', '/signup'];
+  
+  if (!isAuthenticated() && !publicPaths.includes(path)) {
+    // Redirect to sign in if not on public page
+    window.location.href = '/signin';
+  }
+  
+  // Update nav items based on auth status
+  const navItems = document.querySelectorAll('.nav-item[data-page]');
+  navItems.forEach(item => {
+    const page = item.dataset.page;
+    // Hide certain pages if not authenticated
+    if (['users', 'settings', 'documents', 'agent'].includes(page) && !isAuthenticated()) {
+      item.style.display = 'none';
+    } else {
+      item.style.display = 'flex';
+    }
+  });
+});
+
+// Navigation
 document.querySelectorAll(".nav-item[data-page]").forEach(item => {
   const page = item.dataset.page;
   item.addEventListener("click", () => {
@@ -385,10 +484,6 @@ document.querySelectorAll(".nav-item[data-page]").forEach(item => {
       window.location.href = "/users";
     } else if (page === "settings") {
       window.location.href = "/settings";
-    } else if (page === "signin") {
-      window.location.href = "/signin";
-    } else if (page === "signup") {
-      window.location.href = "/signup";
     }
   });
 });

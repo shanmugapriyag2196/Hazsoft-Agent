@@ -364,6 +364,7 @@ h1 {
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script>
 document.querySelectorAll(".nav-item[data-page]").forEach(item => {
   if (item.dataset.page === "main" || !item.dataset.page) {
@@ -378,15 +379,7 @@ async function loadStats() {
     
     document.getElementById('total-docs').textContent = data.total;
     document.getElementById('hazardous-count').textContent = data.hazardous_count;
-    document.getElementById('categories-count').textContent = data.others_count;
-    
-    // Update compliance stats
-    if (data.compliance) {
-      document.getElementById('compliant-percentage').innerHTML = `${data.compliance.compliant}%<span>Compliant</span>`;
-      document.getElementById('ghs-aligned').textContent = `${data.compliance.compliant}%`;
-      document.getElementById('needs-review').textContent = `${data.compliance.needs_review}%`;
-      document.getElementById('action-required').textContent = `${data.compliance.action_required}%`;
-    }
+    document.getElementById('categories-count').textContent = data.categories_count;
     
     const counts = data.counts;
     const max = Math.max(...Object.values(counts), 1);
