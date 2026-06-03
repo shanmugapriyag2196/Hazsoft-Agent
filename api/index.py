@@ -333,7 +333,7 @@ def determine_material_type(question: str, answer: str) -> str:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse("signin.html", {"request": request})
 
 @app.get("/agent", response_class=HTMLResponse)
 def agent(request: Request):
