@@ -154,10 +154,73 @@
     </button>
   </form>
   
-  <div class="links">
-    <p>Don't have an account? <a href="/signup" id="signup-link">Sign Up</a></p>
-    <br>
-    <p><a href="/forgot-password" id="forgot-link">Forgot Password?</a></p>
+    <div class="links">
+      <p>Don't have an account? <a href="/signup" id="signup-link">Sign Up</a></p>
+      <br>
+      <p><a href="/forgot-password" id="forgot-link">Forgot Password?</a></p>
     </div>
+  </div>
+</form>
 </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('signin-form');
+  const emailError = document.getElementById('email-error');
+  const passwordError = document.getElementById('password-error');
+  const submitBtn = document.getElementById('submit-btn');
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Clear errors
+    emailError.textContent = '';
+    passwordError.textContent = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in...';
+    
+    const formData = {
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value
+    };
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        // Store user data (in a real app, you'd store a JWT token)
+        localStorage.setItem('hazsoft_user', JSON.stringify(userData));
+        localStorage.setItem('hazsoft_token', 'dummy-token'); // For demo
+        
+        // Redirect to dashboard
+        window.location.href = '/';
+      } else {
+        const error = await response.json();
+        if (error.detail === 'Invalid email or password') {
+          emailError.textContent = 'Invalid email or password';
+          passwordError.textContent = 'Invalid email or password';
+        } else {
+          emailError.textContent = error.detail || 'Authentication failed';
+        }
+      }
+    } catch (error) {
+      emailError.textContent = 'Network error. Please try again.';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+    }
+  });
+});
+</script>
 {% endblock %}
