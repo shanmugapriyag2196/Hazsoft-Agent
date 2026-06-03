@@ -162,10 +162,18 @@
       flex-direction: column;
       gap: 20px;
     }
-    {% block styles %}{% endblock %}
+     {% block styles %}{% endblock %}
+     <style>
+       .is-auth .shell {
+         grid-template-columns: minmax(0, 1fr) !important;
+       }
+       .is-auth aside {
+         display: none !important;
+       }
+     </style>
   </style>
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 <div class="shell{% if has_agent %} has-agent{% endif %}">
   <aside>
     <div class="brand"><span class="brand-mark">H</span><span>Hazsoft Agent</span></div>
