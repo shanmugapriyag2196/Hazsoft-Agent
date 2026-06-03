@@ -77,6 +77,18 @@ class UserCreate(BaseModel):
     status: str
     password: str = "temp123"  # Default password
 
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    fullName: str
+    email: str
+    role: str
+    status: str
+    # Note: password is not included in response for security
+
 def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         print("Airtable: Missing API key or base ID")
@@ -339,6 +351,14 @@ def settings(request: Request):
 def users(request: Request):
     print("Users route accessed")  # Debug line
     return templates.TemplateResponse("users.html", {"request": request})
+
+@app.get("/signup", response_class=HTMLResponse)
+def signup(request: Request):
+    return templates.TemplateResponse("signup.html", {"request": request})
+
+@app.get("/signin", response_class=HTMLResponse)
+def signin(request: Request):
+    return templates.TemplateResponse("signin.html", {"request": request})
 
 @app.get("/api/documents")
 def api_documents():
@@ -612,6 +632,94 @@ def delete_history(record_id: str):
 def health():
     try:
         return rag_status()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@app.post("/api/auth/register")
+def api_register_user(user: UserCreate):
+    try:
+        # For the users table, we need to use a different table ID
+        AIRTABLE_USERS_TABLE_ID = os.getenv("AIRTABLE_USER_TABLE_ID", "tbl1E5Pu8DpEAharu")
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
+            raise HTTPException(status_code=400, detail="Airtable not configured")
+        
+        # Check if email already exists
+        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+        headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+        
+        # Check for existing email
+        check_response = httpx.get(url, headers=headers, params={"filterByFormula": f"{{Email}} = '{user.email}'"}, timeout=30.0)
+        if check_response.status_code == 200:
+            check_data = check_response.json()
+            if check_data.get("records") and len(check_data["records"]) > 0:
+                raise HTTPException(status_code=400, detail="Email already registered")
+        
+        # Prepare the payload for Airtable
+        payload = {
+            "fields": {
+                "FullName": user.fullName,
+                "Email": user.email,
+                "Role": user.role,
+                "Status": user.status,
+                "Password": user.password
+            }
+        }
+        
+        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
+        response.raise_for_status()
+        created_user = response.json()
+        
+        # Return user data without password
+        return UserResponse(
+            id=created_user["id"],
+            fullName=created_user["fields"]["FullName"],
+            email=created_user["fields"]["Email"],
+            role=created_user["fields"]["Role"],
+            status=created_user["fields"]["Status"]
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@app.post("/api/auth/login")
+def api_login_user(user: UserLogin):
+    try:
+        # For the users table, we need to use a different table ID
+        AIRTABLE_USERS_TABLE_ID = os.getenv("AIRTABLE_USER_TABLE_ID", "tbl1E5Pu8DpEAharu")
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
+            raise HTTPException(status_code=400, detail="Airtable not configured")
+        
+        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+        headers = {
+            "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        
+        # Find user by email
+        params = {"filterByFormula": f"{{Email}} = '{user.email}'"}
+        response = httpx.get(url, headers=headers, params=params, timeout=30.0)
+        response.raise_for_status()
+        data = response.json()
+        
+        if not data.get("records") or len(data["records"]) == 0:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        record = data["records"][0]
+        fields = record.get("fields", {})
+        
+        # Verify password (in production, use hashed password comparison)
+        if fields.get("Password") != user.password:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        # Return user data without password
+        return UserResponse(
+            id=record["id"],
+            fullName=fields.get("FullName", ""),
+            email=fields.get("Email", ""),
+            role=fields.get("Role", ""),
+            status=fields.get("Status", "")
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

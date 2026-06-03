@@ -186,11 +186,19 @@
          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4a9 9 0 0 1 9 9v3h-3v-3a4 4 0 0 0-8 0v3h-3v-3a9 9 0 0 1-9-9zM12 7a3 3 0 0 0 0 6 3 3 0 0 1 6 0v-3a3 3 0 0 0-6 0z"></path></svg>
          Users
        </button>
-       <button class="nav-item" data-page="settings" type="button">
-         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1 2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 .33 1.82H9a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1 2 2 2 2 0 0 1 2-2h-.09a1.65 1.65 0 0 0-1.51-1z"></path></svg>
-         Settings
-       </button>
-    </nav>
+        <button class="nav-item" data-page="settings" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1 2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0-.33-1.82l.06.06a1.65 1.65 0 0 0 .33 1.82H9a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1 2 2 2 2 0 0 1 2-2h-.09a1.65 1.65 0 0 0-1.51-1z"></path></svg>
+          Settings
+        </button>
+        <button class="nav-item" data-page="signin" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.27c-1.8 0-3.26.85-4.05 2.07-.8-1.22-2.25-2.07-4.05-2.07A4 4 0 003 7.27V22h18V7.27c0-1.92-1.16-3.6-2.91-4.73zM12 15a3 3 0 100-6 3 3 0 000 6z"></path></svg>
+          Sign In
+        </button>
+        <button class="nav-item" data-page="signup" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2c-1.1 0-2 .9-2 2h1v2h-2V4c0-1.1-.9-2-2-2h-2V2h4zm1 15h-2v-2h2v-2h-2v-2H8v2H6v2h2v2h-2v2H4v2h2v2h2v2h2v-2h2v2h2v-2h2v-2h2V9h2v2h2v-2h2v-2h2V5l2 2z"/></svg>
+          Sign Up
+        </button>
+      </nav>
     <div class="sidebar-foot">
       <strong>Connected</strong>
       Ask about safety documents, hazards, PPE, storage.
@@ -221,6 +229,10 @@ document.querySelectorAll(".nav-item[data-page]").forEach(item => {
       window.location.href = "/users";
     } else if (page === "settings") {
       window.location.href = "/settings";
+    } else if (page === "signin") {
+      window.location.href = "/signin";
+    } else if (page === "signup") {
+      window.location.href = "/signup";
     }
   });
 });
