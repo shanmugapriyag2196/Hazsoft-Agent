@@ -1,0 +1,11 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_xP2ICwEyL8dHLXBOZPxCFKctIy0x",
+      "name": "hazsoft-agent",
+      "directory": ".",
+      "orgId": "team_5nH8MoVF7AsKOwSbL4x16Tnf"
+    }
+  ]
+}
