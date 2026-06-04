@@ -199,15 +199,15 @@ document.addEventListener('DOMContentLoaded', function() {
         body: JSON.stringify(formData)
       });
       
-      if (response.ok) {
-        const userData = await response.json();
-        // Store user data (in a real app, you'd store a JWT token)
-        localStorage.setItem('hazsoft_user', JSON.stringify(userData));
-        localStorage.setItem('hazsoft_token', 'dummy-token'); // For demo
-        
-        // Redirect to dashboard
-        window.location.href = '/';
-      } else {
+         if (response.ok) {
+           const userData = await response.json();
+           // Store user data (in a real app, you'd store a JWT token)
+           localStorage.setItem('hazsoft_user', JSON.stringify(userData));
+           localStorage.setItem('hazsoft_token', 'dummy-token'); // For demo
+           
+           // Redirect to dashboard
+           window.location.href = '/documents';
+         } else {
         const error = await response.json();
         if (error.detail === 'Invalid email or password') {
           emailError.textContent = 'Invalid email or password';

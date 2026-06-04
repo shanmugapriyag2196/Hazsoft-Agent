@@ -295,13 +295,13 @@ body {
         });
         
         if (response.ok) {
-          const userData = await response.json();
-          // Store user data
-          localStorage.setItem('hazsoft_user', JSON.stringify(userData));
-          localStorage.setItem('hazsoft_token', 'dummy-token'); // For demo
-          
-          // Redirect to dashboard
-          window.location.href = '/';
+           const userData = await response.json();
+           // Store user data
+           localStorage.setItem('hazsoft_user', JSON.stringify(userData));
+           localStorage.setItem('hazsoft_token', 'dummy-token'); // For demo
+           
+           // Redirect to dashboard
+           window.location.href = '/documents';
         } else {
           const error = await response.json();
           if (error.detail === 'Email already registered') {
