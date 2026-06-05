@@ -352,14 +352,6 @@ def users(request: Request):
     print("Users route accessed")  # Debug line
     return templates.TemplateResponse("users.html", {"request": request})
 
-@app.get("/signup", response_class=HTMLResponse)
-def signup(request: Request):
-    return templates.TemplateResponse("signup.html", {"request": request})
-
-@app.get("/signin", response_class=HTMLResponse)
-def signin(request: Request):
-    return templates.TemplateResponse("signin.html", {"request": request})
-
 @app.get("/api/documents")
 def api_documents():
     try:
