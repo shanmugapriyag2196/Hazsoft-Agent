@@ -90,7 +90,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   if (res.ok) {
     const data = await res.json();
     localStorage.setItem('user', JSON.stringify(data));
-    window.location.href = '/';
+    window.location.href = '/dashboard';
   } else {
     const detail = await res.json();
     error.textContent = detail.detail || 'Login failed';
