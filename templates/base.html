@@ -171,7 +171,7 @@
     {% block styles %}{% endblock %}
   </style>
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 <div class="shell{% if has_agent %} has-agent{% endif %}">
   <aside>
     <div class="brand"><span class="brand-mark">H</span><span>Hazsoft Agent</span></div>

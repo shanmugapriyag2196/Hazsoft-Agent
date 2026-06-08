@@ -781,16 +781,23 @@ async def upload_document(file: UploadFile = File(...)):
 @app.get("/files/{filename:path}")
 def serve_pdf(filename: str):
     if VERCEL:
-        # On Vercel, files are in /tmp/pdfs
         filepath = PDF_FOLDER / filename
         if filepath.exists() and filepath.suffix.lower() == ".pdf":
             return FileResponse(path=str(filepath), media_type="application/pdf")
     else:
-        # Local: serve from PDF_FOLDER
         filepath = PDF_FOLDER / filename
         if filepath.exists() and filepath.suffix.lower() == ".pdf":
             return FileResponse(path=str(filepath), media_type="application/pdf")
     raise HTTPException(status_code=404, detail="File not found")
+
+static_dir = Path(__file__).parent.parent / "static"
+
+@app.get("/static/{filename:path}")
+def serve_static(filename: str):
+    filepath = static_dir / filename
+    if filepath.exists():
+        return FileResponse(path=str(filepath))
+    raise HTTPException(status_code=404, detail="Static file not found")
 
 @app.delete("/api/documents/{record_id}")
 def delete_document(record_id: str):

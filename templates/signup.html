@@ -11,6 +11,12 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: var(--shadow);
+  text-align: center;
+}
+.auth-page .logo {
+  width: 120px;
+  height: auto;
+  margin-bottom: 20px;
 }
 .auth-page h2 {
   margin: 0 0 20px;
@@ -76,6 +82,7 @@
 
 {% block content %}
 <div class="auth-page">
+  <img class="logo" src="/static/Hazsoft%20Logo.png" alt="Hazsoft Logo" onerror="this.style.display='none'" />
   <h2>Create New Account</h2>
   <form id="signup-form">
     <div class="form-group">
