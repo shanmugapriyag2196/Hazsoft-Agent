@@ -1,54 +1,74 @@
 {% extends "base.html" %}
+{% block body_class %}is-auth{% endblock %}
 {% block title %}Login - Hazsoft Agent{% endblock %}
 
 {% block styles %}
 .auth-page {
-  max-width: 320px;
-  margin: 60px auto;
-  padding: 24px;
+  max-width: 360px;
+  margin: 80px auto;
+  padding: 28px;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
 }
 .auth-page h2 {
-  margin: 0 0 16px;
-  font-size: 20px;
+  margin: 0 0 20px;
+  font-size: 22px;
 }
 .form-group {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 .form-group label {
   display: block;
   font-size: 13px;
   color: var(--muted);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  font-weight: 600;
 }
 .form-group input {
   width: 100%;
-  padding: 10px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   font-size: 14px;
+  background: #fff;
+}
+.form-group input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 .submit-btn {
   width: 100%;
-  background: var(--blue);
+  background: linear-gradient(135deg, var(--blue), #1d4ed8);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 14px;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
 }
 .error-message {
   color: var(--red);
   font-size: 13px;
-  margin-top: 4px;
+  margin-top: 6px;
+  min-height: 18px;
 }
 .links {
-  margin-top: 12px;
+  margin-top: 14px;
   font-size: 13px;
   text-align: center;
+}
+.links a {
+  color: var(--blue);
+  font-weight: 600;
 }
 {% endblock %}
 
