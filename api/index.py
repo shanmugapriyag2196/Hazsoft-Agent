@@ -302,7 +302,7 @@ def get_chat_history(limit: int = 20) -> List[Dict]:
     encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
-    params = {"pageSize": limit}
+    params = {"pageSize": limit, "sort[0][field]": "Date", "sort[0][direction]": "desc"}
     try:
         response = httpx.get(url, headers=headers, params=params, timeout=30.0)
         response.raise_for_status()

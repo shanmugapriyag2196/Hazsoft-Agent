@@ -342,8 +342,7 @@ async function loadHistory() {
     const data = await response.json();
     historyList.innerHTML = "";
     if (data.history && data.history.length > 0) {
-      const reversed = [...data.history].reverse();
-      reversed.forEach(item => {
+      data.history.forEach(item => {
         const fields = item.fields || {};
         const div = document.createElement("div");
         div.className = "history-item";
