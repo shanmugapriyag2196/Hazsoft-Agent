@@ -158,8 +158,16 @@
       .sidebar-foot .user-info {
         font-size: 12px;
         color: #94a3b8;
-        margin-bottom: 10px;
+        margin-bottom: 4px;
         line-height: 1.4;
+      }
+      .sidebar-foot .user-role {
+        font-size: 11px;
+        color: #64748b;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
       }
       .sidebar-foot .logout-btn {
         width: 100%;
@@ -223,7 +231,8 @@
       </nav>
     <div class="sidebar-foot">
       <strong>Connected</strong>
-      <div class="user-info" id="sidebar-user-info">Loading...</div>
+      <div class="user-info" id="sidebar-email">Loading...</div>
+      <div class="user-role" id="sidebar-role">Loading...</div>
       <button class="logout-btn" id="logout-btn">Logout</button>
     </div>
   </aside>
@@ -263,16 +272,20 @@ document.querySelectorAll(".nav-item[data-page]").forEach(item => {
 
   function updateSidebarUser() {
     const userStr = localStorage.getItem('hazsoft_user');
-    const info = document.getElementById('sidebar-user-info');
-    if (info && userStr) {
+    const emailEl = document.getElementById('sidebar-email');
+    const roleEl = document.getElementById('sidebar-role');
+    if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        info.textContent = user.Email || user.FullName || 'User';
+        if (emailEl) emailEl.textContent = user.Email || 'User';
+        if (roleEl) roleEl.textContent = user.Role || '';
       } catch {
-        info.textContent = 'User';
+        if (emailEl) emailEl.textContent = 'User';
+        if (roleEl) roleEl.textContent = '';
       }
-    } else if (info) {
-      info.textContent = 'Not logged in';
+    } else {
+      if (emailEl) emailEl.textContent = 'Not logged in';
+      if (roleEl) roleEl.textContent = '';
     }
   }
 
