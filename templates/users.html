@@ -246,8 +246,8 @@
       <h2>Add New User</h2>
       <button class="modal-close" id="close-add-modal">&times;</button>
     </div>
-    <div class="modal-body">
-      <form id="add-user-form">
+    <form id="add-user-form">
+      <div class="modal-body">
         <div class="form-group">
           <label for="add-full-name">Full Name</label>
           <input type="text" id="add-full-name" placeholder="Enter full name" required>
@@ -272,12 +272,12 @@
             <option value="Inactive">Inactive</option>
           </select>
         </div>
-        <div class="modal-footer">
-          <button class="btn-secondary" id="add-cancel-btn" type="button">Cancel</button>
-          <button class="btn-primary" id="add-save-btn" type="submit">Create Account</button>
-        </div>
-      </form>
-    </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="add-cancel-btn" type="button">Cancel</button>
+        <button class="btn-primary" id="add-save-btn" type="submit">Create Account</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -288,9 +288,9 @@
       <h2>Edit User</h2>
       <button class="modal-close" id="edit-close-modal">&times;</button>
     </div>
-    <div class="modal-body">
-      <form id="edit-user-form">
-        <input type="hidden" id="edit-user-id">
+    <form id="edit-user-form">
+      <input type="hidden" id="edit-user-id">
+      <div class="modal-body">
         <div class="form-group">
           <label for="edit-full-name">Full Name</label>
           <input type="text" id="edit-full-name" placeholder="Enter full name" required>
@@ -315,12 +315,12 @@
             <option value="Inactive">Inactive</option>
           </select>
         </div>
-      </form>
+      </div>
       <div class="modal-footer">
         <button class="btn-secondary" id="edit-cancel-btn" type="button">Cancel</button>
         <button class="btn-primary" id="edit-save-btn" type="submit">Save Changes</button>
       </div>
-    </div>
+    </form>
   </div>
 </div>
 {% endblock %}
