@@ -331,6 +331,10 @@ def determine_material_type(question: str, answer: str) -> str:
             return f"Non-Hazardous - {material}"
     return "Others"
 
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
@@ -342,10 +346,6 @@ def login(request: Request):
 @app.get("/signup", response_class=HTMLResponse)
 def signup(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
-
-@app.get("/", response_class=HTMLResponse)
-def index(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
 
 @app.get("/agent", response_class=HTMLResponse)
 def agent(request: Request):
