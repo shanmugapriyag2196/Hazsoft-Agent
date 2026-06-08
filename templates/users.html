@@ -275,7 +275,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" id="add-cancel-btn" type="button">Cancel</button>
-        <button class="btn-primary" id="add-save-btn" type="submit">Create Account</button>
+        <button class="btn-primary" id="add-save-btn" type="button">Create Account</button>
       </div>
     </form>
   </div>
@@ -318,7 +318,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" id="edit-cancel-btn" type="button">Cancel</button>
-        <button class="btn-primary" id="edit-save-btn" type="submit">Save Changes</button>
+        <button class="btn-primary" id="edit-save-btn" type="button">Save Changes</button>
       </div>
     </form>
   </div>
@@ -390,17 +390,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
-  // Handle form submission for adding user
-  addUserForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
+  // Add User button click handler
+  addSaveBtn.addEventListener('click', async () => {
+    console.log('Create Account button clicked');
     const formData = {
       fullName: document.getElementById('add-full-name').value,
       email: document.getElementById('add-email').value,
       role: document.getElementById('add-role').value,
       status: document.getElementById('add-status').value,
-      password: 'temp123' // Default password
+      password: 'temp123'
     };
+    console.log('Add user payload', formData);
     
     try {
       const response = await fetch('/api/users', {
@@ -410,6 +410,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         body: JSON.stringify(formData)
       });
+      console.log('Add user response', response.status);
       
       if (response.ok) {
         closeAddModal();
@@ -420,6 +421,64 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Error creating user: ' + (error.detail || 'Unknown error'));
       }
     } catch (error) {
+      console.error('Add user error', error);
+      alert('Error creating user: ' + error.message);
+    }
+  });
+  
+  // Edit User button click handler
+  editSaveBtn.addEventListener('click', async () => {
+    const userId = document.getElementById('edit-user-id').value;
+    console.log('Save Changes button clicked', { userId });
+    if (!userId) {
+      alert('User ID is missing');
+      return;
+    }
+    
+    const formData = {
+      fullName: document.getElementById('edit-full-name').value,
+      email: document.getElementById('edit-email').value,
+      role: document.getElementById('edit-role').value,
+      status: document.getElementById('edit-status').value,
+      password: 'temp123'
+    };
+    console.log('Edit user payload', formData);
+    
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      console.log('Edit user response', response.status);
+      
+      if (response.ok) {
+        closeEditModal();
+        loadUsers();
+        alert('User updated successfully!');
+      } else {
+        const error = await response.json();
+        alert('Error updating user: ' + (error.detail || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Edit user error', error);
+      alert('Error updating user: ' + error.message);
+    }
+  });
+      console.log('Response status:', response.status);
+      
+      if (response.ok) {
+        closeAddModal();
+        loadUsers();
+        alert('User created successfully!');
+      } else {
+        const error = await response.json();
+        alert('Error creating user: ' + (error.detail || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error:', error);
       alert('Error creating user: ' + error.message);
     }
   });
