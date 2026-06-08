@@ -30,6 +30,57 @@
   height: 22px;
   color: var(--blue);
 }
+.user-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.profile-item {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border-left: 4px solid var(--blue);
+}
+.profile-item.full {
+  grid-column: 1 / -1;
+}
+.profile-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+.profile-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  word-break: break-word;
+}
+.profile-value.readonly {
+  color: var(--muted);
+  background: #f1f5f9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 13px;
+}
+.password-section {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+}
+.password-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -45,34 +96,33 @@
 .form-group label {
   margin-bottom: 8px;
   font-weight: 700;
-  color: var(--muted);
+  color: #92400e;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
-.form-group input,
-.form-group select {
+.form-group input {
   padding: 12px 14px;
-  border: 1px solid var(--line);
+  border: 2px solid #fcd34d;
   border-radius: 10px;
   font-size: 14px;
-  background: #f8fafc;
+  background: white;
   transition: all 0.2s ease;
   font-family: inherit;
-  color: var(--ink);
 }
-.form-group input:focus,
-.form-group select:focus {
+.form-group input:focus {
   outline: none;
-  border-color: var(--blue);
+  border-color: #f59e0b;
   background: white;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
 }
-.form-group input:disabled,
-.form-group select:disabled {
-  background: #f1f5f9;
-  color: var(--muted);
-  cursor: not-allowed;
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #fcd34d;
 }
 .btn {
   padding: 12px 24px;
@@ -82,34 +132,32 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
 }
 .btn-primary {
-  background: linear-gradient(135deg, var(--blue), #1d4ed8);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
-.btn-secondary {
-  background: white;
-  color: var(--ink);
-  border: 1px solid var(--line);
+.alert {
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
 }
-.btn-secondary:hover {
-  background: #f8fafc;
+.alert.success {
+  background: rgba(52, 211, 153, 0.15);
+  color: #059669;
+  border: 1px solid rgba(52, 211, 153, 0.3);
 }
-.form-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
+.alert.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 .status-badge {
   display: inline-block;
@@ -155,46 +203,6 @@
   padding: 2px 6px;
   border-radius: 4px;
 }
-.alert {
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  font-weight: 600;
-  display: none;
-}
-.alert.success {
-  background: rgba(52, 211, 153, 0.15);
-  color: #059669;
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  display: block;
-}
-.alert.error {
-  background: rgba(239, 68, 68, 0.15);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  display: block;
-}
-.readonly-field {
-  background: #f1f5f9 !important;
-  color: var(--muted) !important;
-  cursor: not-allowed;
-}
-.password-section {
-  background: #fffbeb;
-  border: 1px solid #fcd34d;
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 16px;
-}
-.password-section h3 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  color: #92400e;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 </style>
 {% endblock %}
 
@@ -208,143 +216,28 @@
       </svg>
       User Profile
     </h2>
-    <div class="alert" id="profile-alert"></div>
-    <form id="profile-form">
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="profile-name">Full Name</label>
-          <input type="text" id="profile-name" placeholder="Enter full name" required>
-        </div>
-        <div class="form-group">
-          <label for="profile-email">Email</label>
-          <input type="email" id="profile-email" placeholder="Enter email" required>
-        </div>
-        <div class="form-group">
-          <label for="profile-role">Role</label>
-          <select id="profile-role">
-            <option value="User">User</option>
-            <option value="Admin">Admin</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="profile-status">Status</label>
-          <select id="profile-status">
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-        </div>
-        <div class="form-group full">
-          <label for="profile-lastlogin">Last Login</label>
-          <input type="text" id="profile-lastlogin" class="readonly-field" disabled>
-        </div>
+    <div class="alert" id="profile-alert" style="display:none;"></div>
+    <div class="user-profile-grid">
+      <div class="profile-item">
+        <div class="profile-label">Full Name</div>
+        <div class="profile-value" id="display-name">-</div>
       </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Save Profile</button>
+      <div class="profile-item">
+        <div class="profile-label">Email</div>
+        <div class="profile-value" id="display-email">-</div>
       </div>
-    </form>
-  </div>
-
-  <div class="settings-section">
-    <h2>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-      </svg>
-      Password Reset
-    </h2>
-    <div class="alert" id="password-alert"></div>
-    <form id="password-form">
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="new-password">New Password</label>
-          <input type="password" id="new-password" placeholder="Enter new password" required minlength="6">
-        </div>
-        <div class="form-group">
-          <label for="confirm-password">Confirm Password</label>
-          <input type="password" id="confirm-password" placeholder="Confirm new password" required minlength="6">
-        </div>
+      <div class="profile-item">
+        <div class="profile-label">Role</div>
+        <div class="profile-value" id="display-role">-</div>
       </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Reset Password</button>
+      <div class="profile-item">
+        <div class="profile-label">Status</div>
+        <div class="profile-value" id="display-status">-</div>
       </div>
-    </form>
-  </div>
-
-  <div class="settings-section">
-    <h2>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="16" y1="2" x2="16" y2="6"></line>
-        <line x1="8" y1="2" x2="8" y2="6"></line>
-        <line x1="3" y1="10" x2="21" y2="10"></line>
-      </svg>
-      System Information
-    </h2>
-    <div class="setting-item">
-      <span class="setting-label">Environment</span>
-      <span class="setting-value">Development</span>
-    </div>
-    <div class="setting-item">
-      <span class="setting-label">Python Version</span>
-      <span class="setting-value">3.8+</span>
-    </div>
-    <div class="setting-item">
-      <span class="setting-label">Platform</span>
-      <span class="setting-value">Windows</span>
-    </div>
-    <div class="setting-item">
-      <span class="setting-label">Working Directory</span>
-      <span class="setting-value code">C:\Users\priyag\Documents\Hazsoft Agent</span>
-    </div>
-  </div>
-
-  <div class="settings-section">
-    <h2>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-      </svg>
-      Service Status
-    </h2>
-    <div class="setting-item">
-      <span class="setting-label">Airtable Connection</span>
-      <span class="setting-value">
-        <span class="status-badge status-connected">Connected</span>
-      </span>
-    </div>
-    <div class="setting-item">
-      <span class="setting-label">Qdrant Vector DB</span>
-      <span class="setting-value">
-        <span class="status-badge status-connected">Connected</span>
-      </span>
-    </div>
-    <div class="setting-item">
-      <span class="setting-label">Cloudinary Storage</span>
-      <span class="setting-value">
-        <span class="status-badge status-connected">Connected</span>
-      </span>
-    </div>
-    <div class="setting-item">
-      <span class="setting-label">OpenAI API</span>
-      <span class="setting-value">
-        <span class="status-badge status-warning">Configured (Key masked)</span>
-      </span>
-    </div>
-  </div>
-
-  <div class="settings-section">
-    <h2>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 17V7l5-5 5 5v10"></path>
-      </svg>
-      Application Configuration
-    </h2>
-    <div class="setting-item">
-      <span class="setting-label">Embedding Model</span>
-      <span class="setting-value">text-embedding-3-small</span>
-    </div>
-    <div class="setting-item">
-      <span class="setting-label">Chat Model</span>
-      <span class="setting-value">gpt-4o-mini</span>
+      <div class="profile-item full">
+        <div class="profile-label">Last Login</div>
+        <div class="profile-value readonly" id="display-lastlogin">-</div>
+      </div>
     </div>
   </div>
 </div>
@@ -352,97 +245,25 @@
 
 {% block scripts %}
 <script>
-document.getElementById('profile-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const alertEl = document.getElementById('profile-alert');
-  alertEl.className = 'alert';
-  alertEl.textContent = '';
-
-  const payload = {
-    fullName: document.getElementById('profile-name').value,
-    email: document.getElementById('profile-email').value,
-    role: document.getElementById('profile-role').value,
-    status: document.getElementById('profile-status').value,
-    password: 'temp123'
-  };
-
-  try {
-    const userId = document.getElementById('profile-name').dataset.userId;
-    const res = await fetch(`/api/users/${userId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (res.ok) {
-      alertEl.className = 'alert success';
-      alertEl.textContent = 'Profile updated successfully!';
-    } else {
-      const err = await res.json();
-      alertEl.className = 'alert error';
-      alertEl.textContent = err.detail || 'Update failed';
-    }
-  } catch (err) {
-    alertEl.className = 'alert error';
-    alertEl.textContent = 'Error: ' + err.message;
-  }
-});
-
-document.getElementById('password-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const alertEl = document.getElementById('password-alert');
-  alertEl.className = 'alert';
-  alertEl.textContent = '';
-
-  const newPassword = document.getElementById('new-password').value;
-  const confirmPassword = document.getElementById('confirm-password').value;
-
-  if (newPassword !== confirmPassword) {
-    alertEl.className = 'alert error';
-    alertEl.textContent = 'Passwords do not match';
-    return;
-  }
-
-  const payload = {
-    fullName: document.getElementById('profile-name').value,
-    email: document.getElementById('profile-email').value,
-    role: document.getElementById('profile-role').value,
-    status: document.getElementById('profile-status').value,
-    password: newPassword
-  };
-
-  try {
-    const userId = document.getElementById('profile-name').dataset.userId;
-    const res = await fetch(`/api/users/${userId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (res.ok) {
-      alertEl.className = 'alert success';
-      alertEl.textContent = 'Password reset successfully!';
-      document.getElementById('password-form').reset();
-    } else {
-      const err = await res.json();
-      alertEl.className = 'alert error';
-      alertEl.textContent = err.detail || 'Password reset failed';
-    }
-  } catch (err) {
-    alertEl.className = 'alert error';
-    alertEl.textContent = 'Error: ' + err.message;
-  }
-});
-
 function loadCurrentUser() {
   const user = JSON.parse(localStorage.getItem('hazsoft_user') || '{}');
+  const alertEl = document.getElementById('profile-alert');
+  alertEl.style.display = 'none';
+  alertEl.className = 'alert';
+  alertEl.textContent = '';
+
   if (user && user.id) {
-    document.getElementById('profile-name').value = user.FullName || '';
-    document.getElementById('profile-name').dataset.userId = user.id;
-    document.getElementById('profile-email').value = user.Email || '';
-    document.getElementById('profile-role').value = user.Role || 'User';
-    document.getElementById('profile-status').value = user.Status || 'Active';
-    document.getElementById('profile-lastlogin').value = user.LastLogin || 'Never';
+    document.getElementById('display-name').textContent = user.FullName || 'N/A';
+    document.getElementById('display-email').textContent = user.Email || 'N/A';
+    document.getElementById('display-role').textContent = user.Role || 'N/A';
+    document.getElementById('display-status').textContent = user.Status || 'N/A';
+    document.getElementById('display-lastlogin').textContent = user.LastLogin || 'Never';
+  } else {
+    document.getElementById('display-name').textContent = 'Not logged in';
+    document.getElementById('display-email').textContent = '-';
+    document.getElementById('display-role').textContent = '-';
+    document.getElementById('display-status').textContent = '-';
+    document.getElementById('display-lastlogin').textContent = '-';
   }
 }
 
