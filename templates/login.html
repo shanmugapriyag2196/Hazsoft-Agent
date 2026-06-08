@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Login - Hazsoft Agent{% endblock %}
+
+{% block styles %}
+.auth-page {
+  max-width: 320px;
+  margin: 60px auto;
+  padding: 24px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.auth-page h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+}
+.form-group {
+  margin-bottom: 12px;
+}
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+}
+.submit-btn {
+  width: 100%;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.error-message {
+  color: var(--red);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.links {
+  margin-top: 12px;
+  font-size: 13px;
+  text-align: center;
+}
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <h2>Login</h2>
+  <form id="login-form">
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required />
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required />
+    </div>
+    <button type="submit" class="submit-btn">Sign In</button>
+    <div class="error-message" id="error"></div>
+  </form>
+  <div class="links">
+    <a href="/signup">Create New Account</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const error = document.getElementById('error');
+  error.textContent = '';
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value
+    })
+  });
+  if (res.ok) {
+    const data = await res.json();
+    localStorage.setItem('user', JSON.stringify(data));
+    window.location.href = '/';
+  } else {
+    const detail = await res.json();
+    error.textContent = detail.detail || 'Login failed';
+  }
+});
+</script>
+{% endblock %}
