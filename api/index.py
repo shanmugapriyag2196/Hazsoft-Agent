@@ -335,6 +335,13 @@ def determine_material_type(question: str, answer: str) -> str:
 def index(request: Request):
     return RedirectResponse(url="/login", status_code=303)
 
+@app.get("/logout")
+def logout():
+    response = RedirectResponse(url="/login", status_code=303)
+    response.delete_cookie("hazsoft_token")
+    response.delete_cookie("hazsoft_user")
+    return response
+
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
