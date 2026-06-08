@@ -153,12 +153,15 @@
 }
 .add-form {
   background: white;
-  padding: 28px;
-  border-radius: 16px;
+  padding: 32px;
+  border-radius: 20px;
   box-shadow: var(--shadow-lg);
   margin-bottom: 24px;
   display: none;
   border: 1px solid var(--line);
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .add-form.active {
   display: block;
@@ -269,211 +272,116 @@
   margin-top: 12px;
   font-weight: 600;
 }
-.users-table tr.edit-row {
-  background: #eff6ff;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
 }
-.users-table tr.edit-row td {
-  padding: 12px 16px;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-.users-header {
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--line);
 }
-.users-header h2 {
+.modal-header h2 {
   margin: 0;
   color: var(--ink);
+  font-size: 22px;
+  font-weight: 800;
 }
-.add-user-btn {
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+.modal-close:hover {
+  background: rgba(0,0,0,0.05);
+  color: var(--ink);
+}
+.modal-body {
+  padding: 28px;
+}
+.modal-body .form-group {
+  margin-bottom: 20px;
+}
+.modal-body .form-group label {
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
-  background: linear-gradient(135deg, var(--green), #047857);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
-.add-user-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+.modal-body .form-group label::before {
+  content: "";
+  width: 4px;
+  height: 14px;
+  background: var(--blue);
+  border-radius: 2px;
 }
-.users-table {
+.modal-body .form-group input,
+.modal-body .form-group select {
   width: 100%;
-  border-collapse: collapse;
-  background: white;
+  padding: 14px 16px;
+  border: 2px solid var(--line);
   border-radius: 12px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-}
-.users-table th {
-  text-align: left;
-  padding: 16px 20px;
+  font-size: 15px;
   background: #f8fafc;
-  color: var(--ink);
-  font-weight: 600;
-  font-size: 14px;
-  border-bottom: 2px solid var(--line);
-}
-.users-table td {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--line);
-  color: var(--ink);
-}
-.users-table tr:last-child td {
-  border-bottom: none;
-}
-.users-table tr:hover {
-  background: #f1f5f9;
-}
-.status-badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-.status-active {
-  background: rgba(52, 211, 153, 0.2);
-  color: #34d399;
-}
-.status-inactive {
-  background: rgba(220, 38, 38, 0.2);
-  color: #dc2626;
-}
-.actions-btn {
-  display: flex;
-  gap: 8px;
-}
-.action-btn {
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-}
-.edit-btn {
-  background: rgba(37, 99, 235, 0.1);
-  color: var(--blue);
-}
-.delete-btn {
-  background: rgba(220, 38, 38, 0.1);
-  color: var(--red);
-}
-.add-form {
-  background: white;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  margin-bottom: 24px;
-  display: none;
-  border: 1px solid var(--line);
-}
-.add-form.active {
-  display: block;
-  animation: slideDown 0.3s ease;
-}
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.add-form h3 {
-  margin: 0 0 20px 0;
-  font-size: 18px;
-  color: var(--ink);
-}
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-.form-group label {
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: var(--muted);
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.form-group input,
-.form-group select {
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
   transition: all 0.2s ease;
+  font-family: inherit;
 }
-.form-group input:focus,
-.form-group select:focus {
+.modal-body .form-group input:focus,
+.modal-body .form-group select:focus {
   outline: none;
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+  border-color: var(--blue);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
-.form-actions {
+.modal-footer {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  margin-top: 20px;
-}
-.btn-secondary {
-  background: rgba(0,0,0,0.05);
-  color: var(--ink);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.btn-secondary:hover {
-  background: rgba(0,0,0,0.08);
-}
-.btn-primary {
-  background: linear-gradient(135deg, var(--green), #047857);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
-}
-.edit-row input {
-  padding: 6px;
-  border: 1px solid var(--blue);
-  border-radius: 4px;
-  font-size: 13px;
-  width: 100%;
-}
-.edit-row select {
-  padding: 6px;
-  border: 1px solid var(--blue);
-  border-radius: 4px;
-  font-size: 13px;
-}
-.error-message {
-  color: var(--red);
-  font-size: 13px;
-  margin-top: 8px;
+  padding: 20px 28px;
+  border-top: 1px solid var(--line);
+  background: #f8fafc;
+  border-radius: 0 0 20px 20px;
 }
 </style>
 {% endblock %}
@@ -491,50 +399,12 @@
     </button>
   </div>
 
-  <div class="add-form" id="add-form">
-    <h3>Add New User</h3>
-    <form id="add-user-form">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="add-full-name">Full Name</label>
-          <input type="text" id="add-full-name" placeholder="Enter full name" required>
-        </div>
-        <div class="form-group">
-          <label for="add-email">Email</label>
-          <input type="email" id="add-email" placeholder="Enter email" required>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="add-role">Role</label>
-          <select id="add-role" required>
-            <option value="User">User</option>
-            <option value="Admin">Admin</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="add-status">Status</label>
-          <select id="add-status" required>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn-secondary" id="cancel-add">Cancel</button>
-        <button type="submit" class="btn-primary">Create Account</button>
-      </div>
-      <div class="error-message" id="add-error"></div>
-    </form>
-  </div>
-
   <div class="users-table-container">
     <table class="users-table">
       <thead>
         <tr>
           <th>Full Name</th>
           <th>Email</th>
-          <th>Password</th>
           <th>Role</th>
           <th>Status</th>
           <th>Actions</th>
@@ -542,10 +412,51 @@
       </thead>
       <tbody id="users-table-body">
         <tr>
-          <td colspan="6" class="loading">Loading users...</td>
+          <td colspan="5" class="loading">Loading users...</td>
         </tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-title">Add New User</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="user-form">
+        <input type="hidden" id="user-id">
+        <div class="form-group">
+          <label for="user-fullname">Full Name</label>
+          <input type="text" id="user-fullname" placeholder="Enter full name" required>
+        </div>
+        <div class="form-group">
+          <label for="user-email">Email</label>
+          <input type="email" id="user-email" placeholder="Enter email" required>
+        </div>
+        <div class="form-group">
+          <label for="user-role">Role</label>
+          <select id="user-role" required>
+            <option value="User">User</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="user-status">Status</label>
+          <select id="user-status" required>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="modal-cancel" type="button">Cancel</button>
+      <button class="btn-primary" id="modal-save" type="submit">Create Account</button>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -554,53 +465,88 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const addBtn = document.getElementById('add-user-btn');
-  const addForm = document.getElementById('add-form');
-  const cancelAddBtn = document.getElementById('cancel-add');
-  const addUserForm = document.getElementById('add-user-form');
-  const addError = document.getElementById('add-error');
+  const modal = document.getElementById('user-modal');
+  const modalClose = document.getElementById('modal-close');
+  const modalCancel = document.getElementById('modal-cancel');
+  const modalSave = document.getElementById('modal-save');
+  const modalTitle = document.getElementById('modal-title');
+  const userIdField = document.getElementById('user-id');
+  const nameField = document.getElementById('user-fullname');
+  const emailField = document.getElementById('user-email');
+  const roleField = document.getElementById('user-role');
+  const statusField = document.getElementById('user-status');
 
-  addBtn.addEventListener('click', () => {
-    addForm.classList.toggle('active');
+  addBtn.addEventListener('click', () => openModal('add'));
+  modalClose.addEventListener('click', closeModal);
+  modalCancel.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
   });
 
-  cancelAddBtn.addEventListener('click', () => {
-    addForm.classList.remove('active');
-    addUserForm.reset();
-    addError.textContent = '';
-  });
+  modalSave.addEventListener('click', async () => {
+    const name = nameField.value.trim();
+    const email = emailField.value.trim();
+    if (!name || !email) {
+      alert('Please enter name and email');
+      return;
+    }
 
-  addUserForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    addError.textContent = '';
-    
-    const formData = {
-      fullName: document.getElementById('add-full-name').value,
-      email: document.getElementById('add-email').value,
-      role: document.getElementById('add-role').value,
-      status: document.getElementById('add-status').value,
+    const payload = {
+      fullName: name,
+      email: email,
+      role: roleField.value,
+      status: statusField.value,
       password: 'temp123'
     };
 
+    const isEdit = !!userIdField.value;
+    const url = isEdit ? `/api/users/${userIdField.value}` : '/api/users';
+    const method = isEdit ? 'PUT' : 'POST';
+
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
-        addForm.classList.remove('active');
-        addUserForm.reset();
+        closeModal();
         loadUsers();
-        alert('User created successfully!');
+        alert(isEdit ? 'User updated successfully!' : 'User created successfully!');
       } else {
         const error = await response.json();
-        addError.textContent = error.detail || 'Error creating user';
+        alert('Error: ' + (error.detail || 'Operation failed'));
       }
     } catch (error) {
-      addError.textContent = 'Error: ' + error.message;
+      alert('Error: ' + error.message);
     }
   });
+
+  function openModal(mode, user = null) {
+    if (mode === 'edit' && user) {
+      modalTitle.textContent = 'Edit User';
+      modalSave.textContent = 'Save Changes';
+      userIdField.value = user.id || '';
+      nameField.value = user.FullName || '';
+      emailField.value = user.Email || '';
+      roleField.value = user.Role || 'User';
+      statusField.value = user.Status || 'Active';
+    } else {
+      modalTitle.textContent = 'Add New User';
+      modalSave.textContent = 'Create Account';
+      userIdField.value = '';
+      nameField.value = '';
+      emailField.value = '';
+      roleField.value = 'User';
+      statusField.value = 'Active';
+    }
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
+  }
 
   async function loadUsers() {
     const tbody = document.querySelector('#users-table-body');
@@ -612,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
       tbody.innerHTML = '';
 
       if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">No users found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5">No users found</td></tr>';
         return;
       }
 
@@ -621,7 +567,6 @@ document.addEventListener('DOMContentLoaded', function() {
         tr.innerHTML = `
           <td>${user.FullName || 'N/A'}</td>
           <td>${user.Email || 'N/A'}</td>
-          <td>${user.Password ? '••••••' : 'N/A'}</td>
           <td>${user.Role || 'N/A'}</td>
           <td>
             <span class="status-badge ${user.Status === 'Active' ? 'status-active' : 'status-inactive'}">
@@ -641,9 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', () => {
           const userId = button.getAttribute('data-id');
           const user = users.find(u => u.id === userId);
-          if (user) {
-            enableEditMode(user);
-          }
+          if (user) openModal('edit', user);
         });
       });
 
@@ -668,72 +611,8 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     } catch (error) {
       console.error('Error loading users:', error);
-      tbody.innerHTML = '<tr><td colspan="6">Error loading users</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5">Error loading users</td></tr>';
     }
-  }
-
-  function enableEditMode(user) {
-    const tbody = document.querySelector('#users-table-body');
-    const rows = tbody.querySelectorAll('tr');
-    rows.forEach(row => {
-      if (row.dataset.userId === user.id) {
-        row.classList.add('edit-row');
-        row.innerHTML = `
-          <td><input type="text" id="edit-name" value="${user.FullName || ''}"></td>
-          <td><input type="email" id="edit-email" value="${user.Email || ''}"></td>
-          <td><input type="text" id="edit-password" value="${user.Password || ''}"></td>
-          <td>
-            <select id="edit-role">
-              <option value="User" ${user.Role === 'User' ? 'selected' : ''}>User</option>
-              <option value="Admin" ${user.Role === 'Admin' ? 'selected' : ''}>Admin</option>
-            </select>
-          </td>
-          <td>
-            <select id="edit-status">
-              <option value="Active" ${user.Status === 'Active' ? 'selected' : ''}>Active</option>
-              <option value="Inactive" ${user.Status === 'Inactive' ? 'selected' : ''}>Inactive</option>
-            </select>
-          </td>
-          <td class="actions-btn">
-            <button class="action-btn edit-btn" id="save-edit" data-id="${user.id}">Save</button>
-            <button class="action-btn delete-btn" id="cancel-edit">Cancel</button>
-          </td>
-        `;
-        row.dataset.userId = user.id;
-
-        document.getElementById('save-edit').addEventListener('click', async () => {
-          const updatedData = {
-            fullName: document.getElementById('edit-name').value,
-            email: document.getElementById('edit-email').value,
-            password: document.getElementById('edit-password').value,
-            role: document.getElementById('edit-role').value,
-            status: document.getElementById('edit-status').value
-          };
-
-          try {
-            const response = await fetch(`/api/users/${user.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(updatedData)
-            });
-
-            if (response.ok) {
-              loadUsers();
-              alert('User updated successfully!');
-            } else {
-              const error = await response.json();
-              alert('Error: ' + (error.detail || 'Update failed'));
-            }
-          } catch (error) {
-            alert('Error: ' + error.message);
-          }
-        });
-
-        document.getElementById('cancel-edit').addEventListener('click', () => {
-          loadUsers();
-        });
-      }
-    });
   }
 
   loadUsers();
