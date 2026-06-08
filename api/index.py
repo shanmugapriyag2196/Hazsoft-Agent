@@ -19,8 +19,8 @@ os.environ.setdefault("CLOUDINARY_API_KEY", "")
 os.environ.setdefault("CLOUDINARY_API_SECRET", "")
 
 # Import after env is loaded
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Redirect
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import datetime
@@ -333,7 +333,7 @@ def determine_material_type(question: str, answer: str) -> str:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return Redirect(url="/login", status_code=303)
+    return RedirectResponse(url="/login", status_code=303)
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
