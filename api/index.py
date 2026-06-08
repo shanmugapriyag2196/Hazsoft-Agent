@@ -333,7 +333,7 @@ def determine_material_type(question: str, answer: str) -> str:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return RedirectResponse(url="/login", status_code=303)
+    return Redirect(url="/login", status_code=303)
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
