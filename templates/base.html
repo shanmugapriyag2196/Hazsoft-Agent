@@ -162,6 +162,12 @@
       flex-direction: column;
       gap: 20px;
     }
+    .is-auth .shell {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .is-auth aside {
+      display: none !important;
+    }
     {% block styles %}{% endblock %}
   </style>
 </head>
