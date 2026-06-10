@@ -117,8 +117,14 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   });
   if (res.ok) {
     const data = await res.json();
-      localStorage.setItem('hazsoft_user', JSON.stringify(data));
-      window.location.href = '/dashboard';
+    localStorage.setItem('hazsoft_user', JSON.stringify({
+      id: data.id,
+      FullName: data.fullName || '',
+      Email: data.email || '',
+      Role: data.role || '',
+      Status: data.status || ''
+    }));
+    window.location.href = '/dashboard';
   } else {
     const detail = await res.json();
     error.textContent = detail.detail || 'Login failed';
