@@ -318,6 +318,13 @@ document.getElementById('password-reset-form').addEventListener('submit', async 
   const newPassword = document.getElementById('new-password').value;
   const confirmPassword = document.getElementById('confirm-password').value;
 
+  if (!currentPassword) {
+    alertEl.style.display = 'block';
+    alertEl.className = 'alert error';
+    alertEl.textContent = 'Please enter your current password';
+    return;
+  }
+
   if (newPassword !== confirmPassword) {
     alertEl.style.display = 'block';
     alertEl.className = 'alert error';
@@ -325,14 +332,33 @@ document.getElementById('password-reset-form').addEventListener('submit', async 
     return;
   }
 
-  if (!currentPassword || !newPassword) {
+  if (!newPassword || newPassword.length < 6) {
     alertEl.style.display = 'block';
     alertEl.className = 'alert error';
-    alertEl.textContent = 'Please fill all password fields';
+    alertEl.textContent = 'New password must be at least 6 characters';
     return;
   }
 
   try {
+    // First verify current password
+    const verifyRes = await fetch('/api/users/verify-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: user.id,
+        current_password: currentPassword
+      })
+    });
+
+    if (!verifyRes.ok) {
+      const err = await verifyRes.json();
+      alertEl.style.display = 'block';
+      alertEl.className = 'alert error';
+      alertEl.textContent = err.detail || 'Current password is incorrect';
+      return;
+    }
+
+    // If verification passed, update the password
     const payload = {
       fullName: user.FullName || '',
       email: user.Email || '',
@@ -341,19 +367,19 @@ document.getElementById('password-reset-form').addEventListener('submit', async 
       password: newPassword
     };
 
-    const res = await fetch(`/api/users/${user.id}`, {
+    const updateRes = await fetch(`/api/users/${user.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
-    if (res.ok) {
+    if (updateRes.ok) {
       alertEl.style.display = 'block';
       alertEl.className = 'alert success';
       alertEl.textContent = 'Password reset successfully!';
       document.getElementById('password-reset-form').reset();
     } else {
-      const err = await res.json();
+      const err = await updateRes.json();
       alertEl.style.display = 'block';
       alertEl.className = 'alert error';
       alertEl.textContent = err.detail || 'Password reset failed';

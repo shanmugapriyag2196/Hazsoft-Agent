@@ -860,3 +860,30 @@ def download_from_airtable():
                     failed.append({"name": name, "error": str(e)})
     
     return {"downloaded": downloaded, "count": len(downloaded), "failed": failed}
+
+class PasswordVerifyRequest(BaseModel):
+    user_id: str
+    current_password: str
+
+@app.post("/api/users/verify-password")
+def verify_password(req: PasswordVerifyRequest):
+    try:
+        AIRTABLE_USERS_TABLE_ID = os.getenv("AIRTABLE_USER_TABLE_ID", "tbl1E5Pu8DpEAharu")
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
+            raise HTTPException(status_code=400, detail="Airtable not configured")
+        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}/{req.user_id}"
+        headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+        response = httpx.get(url, headers=headers, timeout=30.0)
+        response.raise_for_status()
+        record = response.json()
+        fields = record.get("fields", {})
+        stored_password = fields.get("Password", "")
+        if stored_password == req.current_password:
+            return {"valid": True}
+        else:
+            raise HTTPException(status_code=401, detail="Current password is incorrect")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
