@@ -180,7 +180,7 @@ def upload_to_cloudinary(file_content: bytes, filename: str) -> Optional[str]:
         return None
 
 def determine_document_type_from_content(file_content: bytes) -> str:
-    """Parse PDF content to determine document type (Gas, Chemical, Oil, Hazardous, Oxygen, Alcohol, Others)."""
+    """Parse PDF content to determine document type with Hazardous/Non-Hazardous prefix."""
     try:
         from pypdf import PdfReader
         import io
@@ -191,64 +191,55 @@ def determine_document_type_from_content(file_content: bytes) -> str:
             if page.extract_text():
                 text += page.extract_text().lower() + " "
         
+        hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
+        has_hazard = any(hw in text for hw in hazardous_indicators)
+        prefix = "Hazardous" if has_hazard else "Non-Hazardous"
+        
         # Check for specific types in order of priority
         # 1. Gas
         gas_patterns = ["gas", "propane", "butane", "hydrogen", "natural gas", "methane", "gas cylinder", "cylinder"]
         if any(kw in text for kw in gas_patterns):
-            hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
-            has_hazard = any(hw in text for hw in hazardous_indicators)
-            return "Gas" if has_hazard else "Gas"
+            return f"{prefix}-Gas"
         
         # 2. Chemical
         chemical_patterns = ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]
         if any(kw in text for kw in chemical_patterns):
-            hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
-            has_hazard = any(hw in text for hw in hazardous_indicators)
-            return "Chemical" if has_hazard else "Chemical"
+            return f"{prefix}-Chemical"
         
         # 3. Oil
         oil_patterns = ["oil", "lubricant", "petroleum", "hydraulic", "fuel"]
         if any(kw in text for kw in oil_patterns):
-            hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
-            has_hazard = any(hw in text for hw in hazardous_indicators)
-            return "Oil" if has_hazard else "Oil"
+            return f"{prefix}-Oil"
         
-        # 4. Hazardous (general hazardous materials)
-        hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
-        if any(hw in text for hw in hazardous_indicators):
-            return "Hazardous"
-        
-        # 5. Oxygen
+        # 4. Oxygen
         oxygen_patterns = ["oxygen", "oxidizer", "ox. gas", "oxidising"]
         if any(kw in text for kw in oxygen_patterns):
-            return "Oxygen"
+            return f"{prefix}-Oxygen"
         
-        # 6. Alcohol
+        # 5. Alcohol
         alcohol_patterns = ["alcohol", "ethanol", "methanol", "isopropyl", "propanol"]
         if any(kw in text for kw in alcohol_patterns):
-            hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
-            has_hazard = any(hw in text for hw in hazardous_indicators)
-            return "Alcohol" if has_hazard else "Alcohol"
+            return f"{prefix}-Alcohol"
         
-        # 7. Default to Others
-        return "Others"
+        # 6. Default to Others or Hazardous
+        return "Hazardous" if has_hazard else "Others"
     except Exception as e:
         print(f"PDF parsing error: {e}")
         return "Others"
 
 def determine_document_type(filename: str) -> str:
-    """Determine document type based on filename patterns."""
+    """Determine document type based on filename patterns with Hazardous/Non-Hazardous prefix."""
     lower = filename.lower()
     if any(kw in lower for kw in ["gas", "propane", "butane", "hydrogen"]):
-        return "Gas"
+        return "Non-Hazardous-Gas"
     if any(kw in lower for kw in ["oxygen", "oxidizer"]):
-        return "Oxygen"
+        return "Non-Hazardous-Oxygen"
     if any(kw in lower for kw in ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]):
-        return "Chemical"
+        return "Non-Hazardous-Chemical"
     if any(kw in lower for kw in ["oil", "lubricant", "petroleum", "hydraulic", "fuel"]):
-        return "Oil"
+        return "Non-Hazardous-Oil"
     if any(kw in lower for kw in ["alcohol", "ethanol", "methanol", "isopropyl"]):
-        return "Alcohol"
+        return "Non-Hazardous-Alcohol"
     return "Others"
 
 def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Optional[Dict]:
@@ -434,8 +425,8 @@ def api_stats():
         
         # Simple compliance logic (placeholder):
         compliant_count = counts.get("Others", 0)
-        needs_review_count = counts.get("Gas", 0) + counts.get("Oxygen", 0)
-        action_required_count = counts.get("Chemical", 0) + counts.get("Oil", 0) + counts.get("Alcohol", 0) + counts.get("Hazardous", 0)
+        needs_review_count = counts.get("Non-Hazardous-Gas", 0) + counts.get("Non-Hazardous-Oxygen", 0)
+        action_required_count = counts.get("Non-Hazardous-Chemical", 0) + counts.get("Non-Hazardous-Oil", 0) + counts.get("Non-Hazardous-Alcohol", 0)
         
         # Avoid division by zero
         if total == 0:
