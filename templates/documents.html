@@ -197,8 +197,21 @@ async function loadDocuments() {
       data.documents.forEach(item => {
         const fields = item.fields || {};
         const tr = document.createElement("tr");
-        const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
-        const docType = fields.Type || "Others";
+          const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
+          const rawType = fields.Type || "Others";
+          const docType = (() => {
+            const map = {
+              "Hazardous-Chemical": "Chemical",
+              "Hazardous-chemical": "Chemical",
+              "Hazardous-gas": "Gas",
+              "Others-Gas": "Gas",
+              "Others-gas": "Gas",
+              "Others-Oxygen": "Oxygen",
+              "Others-oxygen": "Oxygen",
+              "Others": "Others",
+            };
+            return map[rawType] || rawType;
+          })();
         const attachmentField = fields["DOXC Name"];
         let doxcName = "";
         let fileUrl = "";
