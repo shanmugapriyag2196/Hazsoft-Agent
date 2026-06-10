@@ -126,7 +126,7 @@ def save_doxc_to_airtable(doxc_name: str, file_content: Optional[bytes] = None) 
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
         print("Airtable Doc: Missing configuration")
         return None
-    doc_type = determine_document_type_from_content(file_content) if file_content else "Others"
+    doc_type = determine_document_type_from_content(file_content) if file_content else determine_document_type(doxc_name)
     encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     headers = {
@@ -240,16 +240,20 @@ def determine_document_type_from_content(file_content: bytes) -> str:
 def determine_document_type(filename: str) -> str:
     """Determine document type based on filename patterns with Hazardous/Non-Hazardous prefix."""
     lower = filename.lower()
+    hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
+    has_hazard = any(hw in lower for hw in hazardous_indicators)
+    prefix = "Hazardous" if has_hazard else "Non-Hazardous"
+    
     if any(kw in lower for kw in ["gas", "propane", "butane", "hydrogen"]):
-        return "Non-Hazardous-Gas"
+        return f"{prefix}-Gas"
     if any(kw in lower for kw in ["oxygen", "oxidizer"]):
-        return "Non-Hazardous-Oxygen"
+        return f"{prefix}-Oxygen"
     if any(kw in lower for kw in ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]):
-        return "Non-Hazardous-Chemical"
+        return f"{prefix}-Chemical"
     if any(kw in lower for kw in ["oil", "lubricant", "petroleum", "hydraulic", "fuel"]):
-        return "Non-Hazardous-Oil"
+        return f"{prefix}-Oil"
     if any(kw in lower for kw in ["alcohol", "ethanol", "methanol", "isopropyl"]):
-        return "Non-Hazardous-Alcohol"
+        return f"{prefix}-Alcohol"
     return "Others"
 
 def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Optional[Dict]:
@@ -361,8 +365,8 @@ def determine_material_type(question: str, answer: str) -> str:
             for kw in ["hazard", "danger", "warning", "dangerous", "toxic", "flammable",
                       "corrosive", "explosive", "reactivity", "health hazard"]:
                 if kw in combined:
-                    return f"Hazardous - {material}"
-            return f"Non-Hazardous - {material}"
+                    return f"Hazardous-{material}"
+            return f"Non-Hazardous-{material}"
     return "Others"
 
 @app.get("/", response_class=HTMLResponse)
@@ -432,10 +436,15 @@ def api_stats():
             doc_type = rec.get("fields", {}).get("Type", "Others")
             counts[doc_type] = (counts.get(doc_type, 0) or 0) + 1
             
-            if doc_type in ["Hazardous", "Gas", "Chemical", "Oil", "Oxygen", "Alcohol"]:
-                hazardous_count += 1
-            else:
+            # Normalize type: if old "Standalone" form (e.g., "Gas"), treat as Non-Hazardous
+            if doc_type == "Others":
                 others_count += 1
+            elif doc_type.startswith("Hazardous-"):
+                hazardous_count += 1
+            elif doc_type.startswith("Non-Hazardous-"):
+                others_count += 1
+            elif doc_type in ["Hazardous", "Gas", "Chemical", "Oil", "Oxygen", "Alcohol"]:
+                hazardous_count += 1
         
         # Simple compliance logic (placeholder):
         compliant_count = counts.get("Others", 0)

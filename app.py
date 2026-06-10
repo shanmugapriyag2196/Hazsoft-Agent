@@ -268,8 +268,8 @@ def determine_material_type(question: str, answer: str) -> str:
             for kw in ["hazard", "danger", "warning", "dangerous", "toxic", "flammable",
                       "corrosive", "explosive", "reactivity", "health hazard"]:
                 if kw in combined:
-                    return f"Hazardous - {material}"
-            return f"Non-Hazardous - {material}"
+                    return f"Hazardous-{material}"
+            return f"Non-Hazardous-{material}"
 
     return "Others"
 
