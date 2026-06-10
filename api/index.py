@@ -126,7 +126,22 @@ def save_doxc_to_airtable(doxc_name: str, file_content: Optional[bytes] = None) 
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
         print("Airtable Doc: Missing configuration")
         return None
-    doc_type = determine_document_type_from_content(file_content) if file_content else determine_document_type(doxc_name)
+    
+    if file_content:
+        doc_type = determine_document_type_from_content(file_content)
+    elif PDF_FOLDER:
+        pdf_path = PDF_FOLDER / doxc_name
+        if pdf_path.exists():
+            try:
+                doc_type = determine_document_type_from_content(pdf_path.read_bytes())
+            except Exception as e:
+                print(f"PDF read error for {doxc_name}: {e}")
+                doc_type = "Others"
+        else:
+            print(f"PDF not found at {pdf_path}, falling back to filename")
+            doc_type = determine_document_type(doxc_name)
+    else:
+        doc_type = determine_document_type(doxc_name)
     encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     headers = {
@@ -201,41 +216,159 @@ def determine_document_type_from_content(file_content: bytes) -> str:
             if page.extract_text():
                 text += page.extract_text().lower() + " "
         
-        hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
-        has_hazard = any(hw in text for hw in hazardous_indicators)
-        prefix = "Hazardous" if has_hazard else "Non-Hazardous"
-        
-        # Check for specific types in order of priority
-        # 1. Gas
-        gas_patterns = ["gas", "propane", "butane", "hydrogen", "natural gas", "methane", "gas cylinder", "cylinder"]
-        if any(kw in text for kw in gas_patterns):
-            return f"{prefix}-Gas"
-        
-        # 2. Chemical
-        chemical_patterns = ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]
-        if any(kw in text for kw in chemical_patterns):
-            return f"{prefix}-Chemical"
-        
-        # 3. Oil
-        oil_patterns = ["oil", "lubricant", "petroleum", "hydraulic", "fuel"]
-        if any(kw in text for kw in oil_patterns):
-            return f"{prefix}-Oil"
-        
-        # 4. Oxygen
-        oxygen_patterns = ["oxygen", "oxidizer", "ox. gas", "oxidising"]
+        prefix = classify_hazard(text)
+
+        # Determine material type - check Oxygen BEFORE Gas (oxygen contains "gas")
+        # 1. Oxygen
+        oxygen_patterns = ["oxygen", "oxidizer", "ox. gas", "oxidising", "compressed oxygen"]
         if any(kw in text for kw in oxygen_patterns):
             return f"{prefix}-Oxygen"
         
-        # 5. Alcohol
-        alcohol_patterns = ["alcohol", "ethanol", "methanol", "isopropyl", "propanol"]
+        # 2. Gas (use specific gas types, not just "gas" which matches "oxygen")
+        gas_patterns = ["lpg", "liquefied petroleum", "propane gas", "butane fuel", "natural gas", "gas cylinder", "cylinder"]
+        if any(kw in text for kw in gas_patterns):
+            return f"{prefix}-Gas"
+        
+        # 3. Alcohol
+        alcohol_patterns = ["reagent alcohol", "ethyl alcohol", "methanol", "isopropyl alcohol", "isopropanol"]
         if any(kw in text for kw in alcohol_patterns):
             return f"{prefix}-Alcohol"
         
-        # 6. Default to Others or Hazardous
-        return "Hazardous" if has_hazard else "Others"
+        # 4. Cleaning/Disinfectant -> Chemical (dashboard only supports Chemical, not Cleaning)
+        cleaning_patterns = ["disinfectant", "cleaner and deodorant", "dust mop treatment"]
+        if any(kw in text for kw in cleaning_patterns):
+            return f"{prefix}-Chemical"
+        
+        # 5. Chemical (lab reagents, buffers, controls, solutions)
+        chemical_patterns = ["calibrator", "control", "buffer", "reagent", "solution",
+                            "chemical", "compound", "assay", "hydrochloric", "sulfuric",
+                            "nitric", "formaldehyde", "laboratory chemicals"]
+        if any(kw in text for kw in chemical_patterns):
+            return f"{prefix}-Chemical"
+        
+        # 6. Oil
+        oil_patterns = ["oil", "lubricant", "petroleum", "hydraulic", "fuel", "grease"]
+        if any(kw in text for kw in oil_patterns):
+            return f"{prefix}-Oil"
+        
+        # Default
+        return "Others"
     except Exception as e:
         print(f"PDF parsing error: {e}")
         return "Others"
+
+
+def classify_hazard(text: str) -> str:
+    """Determine if text describes Hazardous or Non-Hazardous material."""
+    import re
+    
+    # ── Step 1: Check for explicit HAZARDOUS declarations FIRST ──
+    # Signal word: Danger (highest priority - overrides any "not classified" boilerplate)
+    if "signal word: danger" in text or "signal word - danger" in text:
+        return "Hazardous"
+    
+    # Flammable/corrosive/toxicity category declarations (GHS hazard categories)
+    hazard_categories = [
+        "flammable liquids, category",
+        "skin corrosion, category",
+        "serious eye damage, category",
+        "acute toxicity, oral, category",
+        "acute toxicity, inhalation, category",
+        "acute toxicity, dermal, category",
+        "corrosive to metals, category",
+        "specific target organ toxicity",
+        "carcinogenicity, category",
+        "mutagenicity, category",
+        "reproductive toxicity, category",
+        "respiratory sensitization, category",
+        "skin sensitization, category",
+        "hazardous to the aquatic environment",
+    ]
+    if any(c in text for c in hazard_categories):
+        return "Hazardous"
+    
+    # H-codes (H200-H399) - GHS hazard statements
+    h_codes = re.findall(r'h\d{3}', text)
+    if h_codes:
+        return "Hazardous"
+    
+    # GHS pictograms
+    ghs_keywords = ["ghs01", "ghs02", "ghs03", "ghs04", "ghs05", "ghs06", "ghs07", "ghs08", "ghs09"]
+    if any(kw in text for kw in ghs_keywords):
+        return "Hazardous"
+    
+    # Specific hazard phrases
+    hazard_phrases = [
+        "causes severe skin burns",
+        "highly flammable",
+        "extremely flammable",
+        "fatal if",
+        "may cause cancer",
+        "toxic by inhalation",
+        "hazardous by the",
+        "dangerous goods",
+    ]
+    if any(p in text for p in hazard_phrases):
+        return "Hazardous"
+    
+    # ── Step 2: Check for explicit NON-HAZARDOUS declarations ──
+    non_hazard_phrases = [
+        "not classified as hazardous",
+        "not considered hazardous",
+        "not classified in accordance with",
+        "does not meet the criteria for classification",
+        "this product is manufactured by streck and does not contain any hazardous",
+        "safety data sheet is not required",
+    ]
+    if any(p in text for p in non_hazard_phrases):
+        return "Non-Hazardous"
+    
+    # ── Step 3: Default ──
+    return "Non-Hazardous"
+    
+    # 2. Explicit HAZARDOUS declarations
+    hazard_phrases = [
+        "signal word: danger",
+        "signal word - danger",
+        "flammable liquids, category",
+        "skin corrosion, category",
+        "serious eye damage, category",
+        "acute toxicity, oral, category",
+        "causes severe skin burns",
+        "highly flammable",
+        "extremely flammable",
+        "hazardous by the",
+    ]
+    if any(p in text for p in hazard_phrases):
+        return "Hazardous"
+    
+    # 3. Check for H-codes (H200-H399) - strong hazard indicator
+    h_codes = re.findall(r'h\d{3}', text)
+    if h_codes:
+        return "Hazardous"
+    
+    # 4. Check for GHS pictograms
+    ghs_keywords = ["ghs01", "ghs02", "ghs03", "ghs04", "ghs05", "ghs06", "ghs07", "ghs08", "ghs09"]
+    if any(kw in text for kw in ghs_keywords):
+        return "Hazardous"
+    
+    # 5. Check for hazard classification keywords
+    hazard_keywords = [
+        "hazard statements",
+        "hazard warning",
+        "fatal if",
+        "may cause cancer",
+        "causes severe",
+        "toxic by inhalation",
+        "corrosive to metals",
+        "danger of",
+        "hazardous to",
+    ]
+    if any(kw in text for kw in hazard_keywords):
+        return "Hazardous"
+    
+    # 6. Default: no clear hazard signals → Non-Hazardous
+    return "Non-Hazardous"
 
 def determine_document_type(filename: str) -> str:
     """Determine document type based on filename patterns with Hazardous/Non-Hazardous prefix."""

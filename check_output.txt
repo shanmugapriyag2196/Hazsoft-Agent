@@ -1,0 +1,473 @@
+﻿
+============================================================
+FILE: 267068.pdf
+============================================================
+SAFETY DATA SHEET  
+Virex« II 256 J-Fill« 
+One-Step Disinfectant Cleaner and Deodorant 
+Revision:  2025-12-04  Version: 
+ 04.0  
+1. IDENTIFICATION 
+Product name: Virex« II 256 J-Fill« 
+One-Step Disinfectant Cleaner and Deodorant 
+SDS #: MS0801116 
+Recommended use: ò Industrial/Institutional
+ò Disinfectant
+ò This product is intended to be diluted prior to use  
+Uses advised against: Uses other than those identified are not recommended  
+ 
+ 
+Emergency telephone number: 1-800-851-7145; 1-651-917-6133 (Int'l)  
+2. HAZARDS IDENTIFICATION 
+Classification for the undiluted product 
+Flammable liquids, Category 4
+Skin corrosion, Category 1C
+Serious eye damage, Category 1
+Acute toxicity, oral, Category 4
+Specific target organ toxicity (repeated exposure), Category 2
+Corrosive to metals, Category 1  
+Signal word: Danger.  
+Hazard Statements 
+COMBUSTIBLE LIQUID. CAUSES SEVERE SKIN BURNS AND SERIOUS EYE DAMAGE. HARMFUL IF SWALLOWED. MAY CAUSE 
+DAMAGE TO ORGANS THROUGH PROLONGED OR REPEATED EXPOSURE. MAY BE CORROSIVE TO METALS.  
+Precautionary Statements 
+Causes burns/ serious damage to mouth, throat and stomach. Keep away from flames and hot surfaces. No smoking. Keep container tightly closed. 
+Keep only in original container. Avoid contact with eyes, skin and clothing. Wash affected areas thoroughly after handling. Do not eat, drink or 
+smoke when using this product. Wear protective gloves, protective clothing and eye or face protection. IF SWALLOWED: Rinse mouth. DO NOT 
+induce vomiting
+...
+
+============================================================
+FILE: 15587.pdf
+============================================================
+Section
+1
+Identification
+of
+the
+substance/mixture
+and
+of
+the
+company/undertaking
+1.1
+Product
+identifier
+Product
+name
+RBC
+FOLA
+TE
+L
+YSING
+AGENT
+Part
+number
+A14206
+Series
+name
+ACCESS
+1.2
+Relevant
+identified
+uses
+of
+the
+substance
+or
+mixture
+and
+uses
+advised
+against
+Product
+use
+For
+In
+V
+itro
+Diagnostic
+Use.
+See
+product
+literature
+for
+details.
+This
+safety
+data
+sheet
+is
+provided
+for
+information
+only
+,
+not
+required
+by
+regulations
+1.3
+Details
+of
+the
+supplier
+of
+the
+safety
+data
+sheet
+Manufacturer
+Beckman
+Coulter
+,
+Inc.
+250
+S.
+Kraemer
+Blvd
+Brea,
+CA
+92821,
+U.S.A.
+T
+el:
+800-854-3633
+Beckman
+Coulter
+Ireland
+Inc.
+Lismeehan,
+O'Callaghan's
+Mills,
+Co.
+Clare,
+Ireland
+T
+el:
++(353)
+(0)
+65
+683
+1
+100
+e
+-
+mail
+address
+SDSNT@beckman.com
+1.4
+Emergency
+telephone
+number
+T
+elephone
+number
+(24H)
+Chemtrec
+Emergency
+T
+el
+No.
+U.S.A.
+800
+-
+424
+-
+9300,
+International
+(001)
+703
+-
+527
+-
+3887
+Distributor
+and
+emergency
+phone
+no.
+Refer
+to
+attached
+list,
+Document
+ID:
+472050
+,
+for
+local
+distributor
+and
+emergency
+phone
+numbers.
+Section
+2
+Hazards
+identification
+2.1
+Classification
+of
+the
+substance
+or
+mixture
+Product
+description
+Mixture
+Colorless;
+L
+yophilized
+-
+Liquid
+after
+reconstitution.;
+Odorless
+Classification
+according
+to
+EC
+1272/2008
+(CLP/GHS)
+Not
+classified
+as
+hazardous
+per
+EC
+1272/2008
+(CLP/GHS)
+Classification
+according
+to
+US
+-
+OSHA
+(HCS
+29
+CFR
+1910.1200)
+and
+UN
+GHS
+Not
+classified
+as
+hazardous
+per
+US
+-
+OSHA
+HCS
+2012
+and
+UN
+GHS
+2.2
+Label
+elements
+According
+to
+EC
+1272/2008
+(CLP/GHS),
+US
+-
+OSHA
+and
+UN
+GHS
+Not
+class
+...
+
+============================================================
+FILE: 267394.pdf
+============================================================
+ 
+ 
+Sigma  - A0937  Page 1  of  9 
+ 
+ 
+ 
+The life science business of Merck KGaA, Darmstadt, Germany 
+operates as MilliporeSigma in the US and Canada  
+  
+ 
+ 
+ 
+ 
+  
+ 
+ 
+SAFETY DATA SHEET  
+ Version  7.2 
+Revision Date  05/25/2023  
+Print Date  07/15/2023  
+ 
+SECTION 1: Identification of the substance/mixture and of the company/undertaking  
+1.1 Product identifiers  
+Product na me : (▒)-Norepinephrine (+) -bitartrate salt  
+ 
+Product Number  : A0937  
+Brand  : Sigma  
+CAS-No. : 3414-63-9 
+1.2 Relevant identified uses of the substance or mixture and uses advised against  
+Identified uses  : Laboratory chemicals , Synthesis of substances  
+ 
+1.3 Details of the supplier of the safety data sheet  
+Company  : Sigma -Aldrich Inc.  
+3050 SPRUCE ST  
+ST. LOUIS MO  63103  
+UNITED STATES   
+Telephone  : +1 314 771 -5765 
+Fax : +1 800 325 -5052 
+1.4 Emergency telephone  
+Emergency Phone #  : 800-424-9300 CHEMTREC (USA) +1 -703-
+527-3887 CHEMTREC (International) 24 
+Hours/day; 7 Days/week  
+ 
+ 
+SECTION 2: Hazards identification  
+2.1 Classification of the substance or mixture  
+GHS Classification in accordance with 29 CFR 1910 (OSHA HCS)  
+Acute toxicity , Oral (Category 2 ), H300  
+Acute toxicity , Inhalation  (Category 1 ), H330  
+Acute toxicity , Dermal  (Category 2 ), H310  
+For the full text of the H -Statements mentioned in this Section, see Section 16.  
+2.2 GHS Label elements, including precautionary statements  
+Pictogram  
+  
+Signal Word  Danger    
+ 
+Sigma  - A0937  Page 2  of
+...
+
+============================================================
+FILE: 201259.pdf
+============================================================
+pH Indica tor Solution (Phenol Red); R -0014 SDS US  
+Page 1 of 6  
+ 
+ 
+SAFETY DATA SHEET  
+According to 29 CFR 1910.1200 Hazard Communication Standard 2012 (HazCom 2012)  
+ 
+Revision: 9/21/2023  
+SECTION 1:  Identification  
+ Product identifier    
+ Product name   pH Indicator Solution (Phenol Red)  
+ Product number   R-0014 
+ Recommended use and 
+restrictions   Water analysis. To be used in accordance with manufacturer instructions or under the direct 
+guidance of the manufacturer.  
+ Manufacturer   Taylor Water Technologies LLC  
+31 Loveton Circle  
+Sparks, MD 21152  
+Local: (410) 472 -4340 û 8am û 5pm EST  
+Toll-free: (800) 837 -8548 û 8am û 5pm EST  
+ Emergency phone number    
+ CHEMTREC, United States   1-800-424-9300 û 24-hour service  
+ CHEMTREC, International   +1 703-741-5970  û 24-hour service  
+SECTION 2: Hazard(s) Identification  
+ Physical hazards   Not classified   
+ Health hazards   Not classified   
+ Environmental hazards   Not currently regulated by OSHA. For additional information, refer to section 12 of the SDS.  
+ Label elements    
+ Hazard pictograms   Not applicable  
+ Signal word   Not applicable  
+ Hazard statements   Not applicable  
+ Precautionary statements    
+ Prevention   Avoid contact with skin, eyes, or clothing. For contact with skin or eyes, flush 20 minutes with 
+water. If ingested, contact physician or local poison control center. Treat symptoms as needed.  
+ Response   This reagent is not defined as a hazardous chemical per OSHAÆs Hazard 
+...
+
+============================================================
+FILE: 284554.pdf
+============================================================
+SAFETY DATA SHEET  
+Revision date  26-Dec-2024  Revision Number  1.1  
+1. Identification 
+Product identifier 
+Product Name Liquichek Immunoassay Plus Control, Levels 2 & 3 
+Other means of identification 
+Catalog Number(s) 362, 363, 268, 269, 12004320, 12004321  
+Recommended use of the chemical and restrictions on use 
+Recommended use In vitro diagnostic  
+Details of the supplier of the safety data sheet 
+Technical Service 1(800) 854-6737 
+qsd.techservice@bio-rad.com  
+Emergency telephone number 
+24 Hour Emergency Phone Number CHEMTREC USA: 1 (800) 424-9300  
+2. Hazard(s) identification 
+Classification 
+This chemical is not considered hazardous by the 2012 OSHA Hazard Communication Standard (29 CFR 1910.1200).  
+Hazards not otherwise classified (HNOC)  
+Not applicable  
+Label elements 
+Other information  Corporate Headquarters
+Bio-Rad Laboratories Inc.
+1000 Alfred Nobel Drive 
+Hercules, CA 94547 
+USA  Manufacturer Address
+Bio-Rad Laboratories Inc. 
+9500 Jeronimo Road 
+Irvine, California 92618 
+USA  Legal Entity / Contact Address
+Bio-Rad Laboratories Inc. 
+9500 Jeronimo Road 
+Irvine, California 92618 
+USA  
+Hazard statements  
+This chemical is not considered hazardous by the 2012 OSHA Hazard Communication Standard (29 CFR 1910.1200).  
+The product contains no substances which at their given concentration, are considered to be hazardous to health.  
+Appearance  Clear to slightly cloudy  Physical state  Liquid  
+AGHS  /  EN  Page  1 / 9  Odor  Slight  Liquichek Immunoassay Plus C
+...
+
+============================================================
+FILE: 291286.pdf
+============================================================
+SAFETY DATA SHEET  
+Revision date  05-Dec-2024  Revision Number  1.1  
+1. Identification 
+Product identifier 
+Product Name Liquichek Diabetes Control 
+Other means of identification 
+Catalog Number(s) 171, 172, 173, 172X, 291, 292, 293, 292X  
+Recommended use of the chemical and restrictions on use 
+Recommended use In vitro diagnostic  
+Details of the supplier of the safety data sheet 
+Technical Service 1(800) 854-6737 
+qsd.techservice@bio-rad.com  
+Emergency telephone number 
+24 Hour Emergency Phone Number CHEMTREC USA: 1 (800) 424-9300  
+2. Hazard(s) identification 
+Classification 
+This chemical is not considered hazardous by the 2012 OSHA Hazard Communication Standard (29 CFR 1910.1200).  
+Hazards not otherwise classified (HNOC)  
+Not applicable  
+Label elements 
+Other information  Corporate Headquarters
+Bio-Rad Laboratories Inc.
+1000 Alfred Nobel Drive 
+Hercules, CA 94547 
+USA  Manufacturer Address
+Bio-Rad Laboratories Inc. 
+9500 Jeronimo Road 
+Irvine, California 92618 
+USA  Legal Entity / Contact Address
+Bio-Rad Laboratories Inc. 
+9500 Jeronimo Road 
+Irvine, California 92618 
+USA  
+Hazard statements  
+This chemical is not considered hazardous by the 2012 OSHA Hazard Communication Standard (29 CFR 1910.1200).  
+The product contains no substances which at their given concentration, are considered to be hazardous to health.  
+Appearance  Opaque  Physical state  Liquid  
+AGHS  /  EN  Page  1 / 8  Odor  Slight  Liquichek Diabetes Control Revision date  05-Dec-2024  
+ 
+Contains
+...

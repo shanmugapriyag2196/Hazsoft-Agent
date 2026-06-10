@@ -1,0 +1,48 @@
+﻿=== FULL TEXT (first 2000 chars) ===
+safety data sheet  
+virex« ii 256 j-fill« 
+one-step disinfectant cleaner and deodorant 
+revision:  2025-12-04  version: 
+ 04.0  
+1. identification 
+product name: virex« ii 256 j-fill« 
+one-step disinfectant cleaner and deodorant 
+sds #: ms0801116 
+recommended use: ò industrial/institutional
+ò disinfectant
+ò this product is intended to be diluted prior to use  
+uses advised against: uses other than those identified are not recommended  
+ 
+ 
+emergency telephone number: 1-800-851-7145; 1-651-917-6133 (int'l)  
+2. hazards identification 
+classification for the undiluted product 
+flammable liquids, category 4
+skin corrosion, category 1c
+serious eye damage, category 1
+acute toxicity, oral, category 4
+specific target organ toxicity (repeated exposure), category 2
+corrosive to metals, category 1  
+signal word: danger.  
+hazard statements 
+combustible liquid. causes severe skin burns and serious eye damage. harmful if swallowed. may cause 
+damage to organs through prolonged or repeated exposure. may be corrosive to metals.  
+precautionary statements 
+causes burns/ serious damage to mouth, throat and stomach. keep away from flames and hot surfaces. no smoking. keep container tightly closed. 
+keep only in original container. avoid contact with eyes, skin and clothing. wash affected areas thoroughly after handling. do not eat, drink or 
+smoke when using this product. wear protective gloves, protective clothing and eye or face protection. if swallowed: rinse mouth. do not 
+induce vomiting unless directed to do so by medical personnel. drink a cupful of milk or water. if on skin (or hair): take off immediately all 
+contaminated clothing. rinse skin with water for at least 15 minutes. wash contaminated clothing before reuse. if inhaled: remove person to 
+fresh air and keep comfortable for breathing. if in eyes: rinse cautiously with water for several minutes. remove contact lenses, if present and 
+easy to do. continue rinsing for at least 15 minutes. immediately call a poison cent
+
+=== HAZARD CHECKS ===
+  'not classified as hazardous': True | context: 'ed on the label, is not classified as hazardous according to osha 29cfr 1910.120'
+  'flammable liquids, category': True | context: ' undiluted product \nflammable liquids, category 4\nskin corrosion, category 1c\nse'
+  'signal word: danger': True | context: 'etals, category 1  \nsignal word: danger.  \nhazard statements \ncombustible liquid'
+  'skin corrosion': True | context: 'liquids, category 4\nskin corrosion, category 1c\nserious eye damage, category 1\na'
+  'serious eye damage': True | context: 'rosion, category 1c\nserious eye damage, category 1\nacute toxicity, oral, categor'
+  'causes severe': True | context: 'combustible liquid. causes severe skin burns and serious eye damage. harmful if '
+  'hazard': True | context: "7-6133 (int'l)  \n2. hazards identification \nclassification for the undiluted pro"
+  'danger': True | context: 'ry 1  \nsignal word: danger.  \nhazard statements \ncombustible liquid. causes seve'
+  'alcohol': True | context: '85-1 5 - 10% \nethyl alcohol 64-17-5 1 - 5% \ntetrasodium salt of edta 64-02-8 1 -'
