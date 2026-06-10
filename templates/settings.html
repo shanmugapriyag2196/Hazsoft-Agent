@@ -240,6 +240,36 @@
       </div>
     </div>
   </div>
+
+  <div class="settings-section">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      Password Reset
+    </h2>
+    <form id="password-reset-form">
+      <div class="alert" id="password-alert" style="display:none;"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="current-password">Current Password</label>
+          <input type="password" id="current-password" placeholder="Enter current password" required>
+        </div>
+        <div class="form-group">
+          <label for="new-password">New Password</label>
+          <input type="password" id="new-password" placeholder="Enter new password" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label for="confirm-password">Confirm Password</label>
+          <input type="password" id="confirm-password" placeholder="Confirm new password" required minlength="6">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Reset Password</button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
 
@@ -257,7 +287,9 @@ function loadCurrentUser() {
     document.getElementById('display-email').textContent = user.Email || 'N/A';
     document.getElementById('display-role').textContent = user.Role || 'N/A';
     document.getElementById('display-status').textContent = user.Status || 'N/A';
-    document.getElementById('display-lastlogin').textContent = user.LastLogin || 'Never';
+    const now = new Date();
+    const formatted = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    document.getElementById('display-lastlogin').textContent = formatted;
   } else {
     document.getElementById('display-name').textContent = 'Not logged in';
     document.getElementById('display-email').textContent = '-';
@@ -266,6 +298,72 @@ function loadCurrentUser() {
     document.getElementById('display-lastlogin').textContent = '-';
   }
 }
+
+document.getElementById('password-reset-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alertEl = document.getElementById('password-alert');
+  alertEl.style.display = 'none';
+  alertEl.className = 'alert';
+  alertEl.textContent = '';
+
+  const user = JSON.parse(localStorage.getItem('hazsoft_user') || '{}');
+  if (!user || !user.id) {
+    alertEl.style.display = 'block';
+    alertEl.className = 'alert error';
+    alertEl.textContent = 'Not logged in';
+    return;
+  }
+
+  const currentPassword = document.getElementById('current-password').value;
+  const newPassword = document.getElementById('new-password').value;
+  const confirmPassword = document.getElementById('confirm-password').value;
+
+  if (newPassword !== confirmPassword) {
+    alertEl.style.display = 'block';
+    alertEl.className = 'alert error';
+    alertEl.textContent = 'New passwords do not match';
+    return;
+  }
+
+  if (!currentPassword || !newPassword) {
+    alertEl.style.display = 'block';
+    alertEl.className = 'alert error';
+    alertEl.textContent = 'Please fill all password fields';
+    return;
+  }
+
+  try {
+    const payload = {
+      fullName: user.FullName || '',
+      email: user.Email || '',
+      role: user.Role || 'User',
+      status: user.Status || 'Active',
+      password: newPassword
+    };
+
+    const res = await fetch(`/api/users/${user.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      alertEl.style.display = 'block';
+      alertEl.className = 'alert success';
+      alertEl.textContent = 'Password reset successfully!';
+      document.getElementById('password-reset-form').reset();
+    } else {
+      const err = await res.json();
+      alertEl.style.display = 'block';
+      alertEl.className = 'alert error';
+      alertEl.textContent = err.detail || 'Password reset failed';
+    }
+  } catch (err) {
+    alertEl.style.display = 'block';
+    alertEl.className = 'alert error';
+    alertEl.textContent = 'Error: ' + err.message;
+  }
+});
 
 loadCurrentUser();
 </script>
