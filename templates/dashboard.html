@@ -390,7 +390,7 @@ async function loadStats() {
     const counts = data.counts;
     const max = Math.max(...Object.values(counts), 1);
     const barChart = document.querySelector('.bar-chart');
-    const colors = {"Hazardous-Chemical": "var(--blue)", "Hazardous-gas": "var(--red)", "Others-Gas": "var(--teal)", "Others-Oxygen": "var(--green)", "Others": "var(--amber)"};
+    const colors = {"Gas": "var(--red)", "Chemical": "var(--blue)", "Oil": "var(--amber)", "Hazardous": "var(--purple)", "Oxygen": "var(--green)", "Alcohol": "var(--teal)", "Others": "var(--muted)"};
     
     barChart.innerHTML = "";
     Object.entries(counts).forEach(([cat, count]) => {

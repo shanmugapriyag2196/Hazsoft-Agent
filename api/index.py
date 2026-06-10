@@ -180,7 +180,7 @@ def upload_to_cloudinary(file_content: bytes, filename: str) -> Optional[str]:
         return None
 
 def determine_document_type_from_content(file_content: bytes) -> str:
-    """Parse PDF content to determine document type (Hazardous-gas, Hazardous-chemical, Oxygen, Non Hazardous, Others-Gas, Others)."""
+    """Parse PDF content to determine document type (Gas, Chemical, Oil, Hazardous, Oxygen, Alcohol, Others)."""
     try:
         from pypdf import PdfReader
         import io
@@ -191,22 +191,47 @@ def determine_document_type_from_content(file_content: bytes) -> str:
             if page.extract_text():
                 text += page.extract_text().lower() + " "
         
-        hazard_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
-        has_hazard = any(hw in text for hw in hazard_indicators)
-        
-        gas_patterns = ["propane", "butane", "hydrogen", "natural gas", "methane", "gas cylinder"]
+        # Check for specific types in order of priority
+        # 1. Gas
+        gas_patterns = ["gas", "propane", "butane", "hydrogen", "natural gas", "methane", "gas cylinder", "cylinder"]
         if any(kw in text for kw in gas_patterns):
-            return "Hazardous-gas" if has_hazard else "Others-Gas"
+            hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
+            has_hazard = any(hw in text for hw in hazardous_indicators)
+            return "Gas" if has_hazard else "Gas"
         
+        # 2. Chemical
+        chemical_patterns = ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]
+        if any(kw in text for kw in chemical_patterns):
+            hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
+            has_hazard = any(hw in text for hw in hazardous_indicators)
+            return "Chemical" if has_hazard else "Chemical"
+        
+        # 3. Oil
+        oil_patterns = ["oil", "lubricant", "petroleum", "hydraulic", "fuel"]
+        if any(kw in text for kw in oil_patterns):
+            hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
+            has_hazard = any(hw in text for hw in hazardous_indicators)
+            return "Oil" if has_hazard else "Oil"
+        
+        # 4. Hazardous (general hazardous materials)
+        hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
+        if any(hw in text for hw in hazardous_indicators):
+            return "Hazardous"
+        
+        # 5. Oxygen
         oxygen_patterns = ["oxygen", "oxidizer", "ox. gas", "oxidising"]
         if any(kw in text for kw in oxygen_patterns):
             return "Oxygen"
         
-        chemical_patterns = ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]
-        if any(kw in text for kw in chemical_patterns):
-            return "Hazardous-chemical" if has_hazard else "Others-chemical"
+        # 6. Alcohol
+        alcohol_patterns = ["alcohol", "ethanol", "methanol", "isopropyl", "propanol"]
+        if any(kw in text for kw in alcohol_patterns):
+            hazardous_indicators = ["hazard", "dangerous", "flammable", "corrosive", "explosive", "warning", "toxic"]
+            has_hazard = any(hw in text for hw in hazardous_indicators)
+            return "Alcohol" if has_hazard else "Alcohol"
         
-        return "Non Hazardous" if has_hazard else "Others"
+        # 7. Default to Others
+        return "Others"
     except Exception as e:
         print(f"PDF parsing error: {e}")
         return "Others"
@@ -215,11 +240,15 @@ def determine_document_type(filename: str) -> str:
     """Determine document type based on filename patterns."""
     lower = filename.lower()
     if any(kw in lower for kw in ["gas", "propane", "butane", "hydrogen"]):
-        return "Others-Gas"
+        return "Gas"
     if any(kw in lower for kw in ["oxygen", "oxidizer"]):
         return "Oxygen"
     if any(kw in lower for kw in ["chemical", "solvent", "acid", "reagent", "lab", "laboratory"]):
-        return "Hazardous-chemical"
+        return "Chemical"
+    if any(kw in lower for kw in ["oil", "lubricant", "petroleum", "hydraulic", "fuel"]):
+        return "Oil"
+    if any(kw in lower for kw in ["alcohol", "ethanol", "methanol", "isopropyl"]):
+        return "Alcohol"
     return "Others"
 
 def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Optional[Dict]:
@@ -403,21 +432,23 @@ def api_stats():
             else:
                 others_count += 1
         
-        # Calculate compliance stats based on document types
-        # This is a placeholder logic - in reality, this would come from actual compliance data
-        hazardous_chemical_count = counts.get("Hazardous-Chemical", 0)
-        hazardous_gas_count = counts.get("Hazardous-gas", 0)
-        others_gas_count = counts.get("Others-Gas", 0)
-        others_oxygen_count = counts.get("Others-Oxygen", 0)
-        others_type_count = counts.get("Others", 0)
-        
-        # Simple compliance logic (placeholder):
-        # - Compliant: Others types (assumed to be properly handled non-hazardous materials)
-        # - Needs review: Hazardous gases (may need special handling checks)
-        # - Action required: Hazardous chemicals (require immediate safety measures)
-        compliant_count = others_gas_count + others_oxygen_count + others_type_count
-        needs_review_count = hazardous_gas_count
-        action_required_count = hazardous_chemical_count
+          # Calculate compliance stats based on document types
+          hazardous_count = 0
+          others_count = 0
+          
+          for rec in records:
+              doc_type = rec.get("fields", {}).get("Type", "Others")
+              counts[doc_type] = (counts.get(doc_type, 0) or 0) + 1
+              
+              if doc_type in ["Hazardous", "Gas", "Chemical", "Oil", "Oxygen", "Alcohol"]:
+                  hazardous_count += 1
+              else:
+                  others_count += 1
+          
+          # Simple compliance logic (placeholder):
+          compliant_count = counts.get("Others", 0)
+          needs_review_count = counts.get("Gas", 0) + counts.get("Oxygen", 0)
+          action_required_count = counts.get("Chemical", 0) + counts.get("Oil", 0) + counts.get("Alcohol", 0) + counts.get("Hazardous", 0)
         
         # Avoid division by zero
         if total == 0:
