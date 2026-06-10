@@ -122,29 +122,39 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> Opt
         print(f"Airtable save error: {e}")
         return None
 
-def save_doxc_to_airtable(doxc_name: str) -> Optional[Dict]:
+def save_doxc_to_airtable(doxc_name: str, file_content: Optional[bytes] = None) -> Optional[Dict]:
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
         print("Airtable Doc: Missing configuration")
         return None
+    doc_type = determine_document_type_from_content(file_content) if file_content else "Others"
     encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     headers = {
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json",
     }
+    fields = {
+        "Date": datetime.datetime.now().isoformat(),
+        "Type": doc_type,
+    }
+    if file_content:
+        file_url = upload_to_cloudinary(file_content, doxc_name)
+        if file_url:
+            fields["DOXC Name"] = [{"url": file_url, "filename": doxc_name}]
+        else:
+            fields["DOXC Name"] = [{"filename": doxc_name}]
+    else:
+        fields["DOXC Name"] = [{"filename": doxc_name}]
     payload = {
         "records": [{
-            "fields": {
-                "Date": datetime.datetime.now().isoformat(),
-                "DOXC Name": [{"filename": doxc_name}],
-            }
+            "fields": fields
         }]
     }
     try:
         response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
         response.raise_for_status()
         result = response.json()
-        print(f"Airtable Doc save success: {result}")
+        print(f"Airtable Doc save success: Type={doc_type}")
         return result
     except httpx.HTTPStatusError as e:
         print(f"Airtable Doc save error - Status: {e.response.status_code}, Body: {e.response.text}")
@@ -247,13 +257,10 @@ def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Opti
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_DOC_TABLE_ID:
         return None
     
-    # Upload to Cloudinary first (required for Airtable attachments)
-    file_url = upload_to_cloudinary(file_content, doxc_name)
-    if not file_url:
-        print("Failed to upload to Cloudinary")
-        return None
-    
     doc_type = determine_document_type_from_content(file_content)
+    
+    # Try Cloudinary upload (optional - for attachment field)
+    file_url = upload_to_cloudinary(file_content, doxc_name)
     
     encoded_table = urllib.parse.quote(AIRTABLE_DOC_TABLE_ID, safe='')
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
@@ -261,23 +268,30 @@ def save_doxc_to_airtable_with_file(doxc_name: str, file_content: bytes) -> Opti
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json",
     }
+    
+    # Build payload - always include Type, include attachment only if Cloudinary succeeded
+    fields = {
+        "Date": datetime.datetime.now().isoformat(),
+        "Type": doc_type,
+    }
+    
+    if file_url:
+        fields["DOXC Name"] = [{
+            "url": file_url,
+            "filename": doxc_name
+        }]
+    
     payload = {
         "records": [{
-            "fields": {
-                "Date": datetime.datetime.now().isoformat(),
-                "DOXC Name": [{
-                    "url": file_url,
-                    "filename": doxc_name
-                }],
-                "Type": doc_type,
-            }
+            "fields": fields
         }]
     }
+    
     try:
         response = httpx.post(url, headers=headers, json=payload, timeout=60.0)
         response.raise_for_status()
         result = response.json()
-        print(f"Airtable Doc upload success: {result}")
+        print(f"Airtable Doc upload success: Type={doc_type}, has_attachment={bool(file_url)}")
         return result
     except httpx.HTTPStatusError as e:
         print(f"Airtable Doc upload error - Status: {e.response.status_code}, Body: {e.response.text}")
@@ -810,7 +824,7 @@ async def upload_document(file: UploadFile = File(...)):
         filepath = PDF_FOLDER / file.filename
         with open(filepath, "wb") as buffer:
             buffer.write(content)
-        save_doxc_to_airtable(file.filename)
+        save_doxc_to_airtable(file.filename, content)
         return {"filename": file.filename, "status": "uploaded"}
 
 @app.get("/files/{filename:path}")
