@@ -427,28 +427,15 @@ def api_stats():
             doc_type = rec.get("fields", {}).get("Type", "Others")
             counts[doc_type] = (counts.get(doc_type, 0) or 0) + 1
             
-            if doc_type.startswith("Hazardous"):
+            if doc_type in ["Hazardous", "Gas", "Chemical", "Oil", "Oxygen", "Alcohol"]:
                 hazardous_count += 1
             else:
                 others_count += 1
         
-          # Calculate compliance stats based on document types
-          hazardous_count = 0
-          others_count = 0
-          
-          for rec in records:
-              doc_type = rec.get("fields", {}).get("Type", "Others")
-              counts[doc_type] = (counts.get(doc_type, 0) or 0) + 1
-              
-              if doc_type in ["Hazardous", "Gas", "Chemical", "Oil", "Oxygen", "Alcohol"]:
-                  hazardous_count += 1
-              else:
-                  others_count += 1
-          
-          # Simple compliance logic (placeholder):
-          compliant_count = counts.get("Others", 0)
-          needs_review_count = counts.get("Gas", 0) + counts.get("Oxygen", 0)
-          action_required_count = counts.get("Chemical", 0) + counts.get("Oil", 0) + counts.get("Alcohol", 0) + counts.get("Hazardous", 0)
+        # Simple compliance logic (placeholder):
+        compliant_count = counts.get("Others", 0)
+        needs_review_count = counts.get("Gas", 0) + counts.get("Oxygen", 0)
+        action_required_count = counts.get("Chemical", 0) + counts.get("Oil", 0) + counts.get("Alcohol", 0) + counts.get("Hazardous", 0)
         
         # Avoid division by zero
         if total == 0:
