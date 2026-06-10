@@ -198,27 +198,7 @@ async function loadDocuments() {
         const fields = item.fields || {};
         const tr = document.createElement("tr");
           const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
-          const rawType = fields.Type || "Others";
-          const docType = (() => {
-            const map = {
-              "Hazardous-Chemical": "Hazardous-Chemical",
-              "Hazardous-chemical": "Hazardous-Chemical",
-              "Hazardous-gas": "Hazardous-Gas",
-              "Hazardous-Gas": "Hazardous-Gas",
-              "Others-Gas": "Non-Hazardous-Gas",
-              "Others-gas": "Non-Hazardous-Gas",
-              "Others-Oxygen": "Non-Hazardous-Oxygen",
-              "Others-oxygen": "Non-Hazardous-Oxygen",
-              "Others": "Others",
-              "Hazardous": "Hazardous",
-              "Gas": "Non-Hazardous-Gas",
-              "Chemical": "Non-Hazardous-Chemical",
-              "Oil": "Non-Hazardous-Oil",
-              "Oxygen": "Non-Hazardous-Oxygen",
-              "Alcohol": "Non-Hazardous-Alcohol",
-            };
-            return map[rawType] || rawType;
-          })();
+          const docType = fields.Type || "Others";
         const attachmentField = fields["DOXC Name"];
         let doxcName = "";
         let fileUrl = "";
