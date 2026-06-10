@@ -582,6 +582,25 @@ def api_delete_user(user_id: str):
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
+@app.get("/api/users/{user_id}/password")
+def get_user_password(user_id: str):
+    try:
+        AIRTABLE_USERS_TABLE_ID = os.getenv("AIRTABLE_USER_TABLE_ID", "tbl1E5Pu8DpEAharu")
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
+            raise HTTPException(status_code=400, detail="Airtable not configured")
+        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}/{user_id}"
+        headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+        response = httpx.get(url, headers=headers, timeout=30.0)
+        response.raise_for_status()
+        record = response.json()
+        fields = record.get("fields", {})
+        return {"password": fields.get("Password", "")}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
 @app.get("/debug/airtable")
 def debug_airtable():
     status = {

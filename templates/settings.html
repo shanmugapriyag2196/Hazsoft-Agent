@@ -392,5 +392,23 @@ document.getElementById('password-reset-form').addEventListener('submit', async 
 });
 
 loadCurrentUser();
+
+async function loadCurrentPassword() {
+  const user = JSON.parse(localStorage.getItem('hazsoft_user') || '{}');
+  const currentPasswordField = document.getElementById('current-password');
+  if (user && user.id && currentPasswordField) {
+    try {
+      const res = await fetch(`/api/users/${user.id}/password`);
+      if (res.ok) {
+        const data = await res.json();
+        currentPasswordField.value = data.password || '';
+      }
+    } catch (err) {
+      console.error('Failed to load current password:', err);
+    }
+  }
+}
+
+loadCurrentPassword();
 </script>
 {% endblock %}
