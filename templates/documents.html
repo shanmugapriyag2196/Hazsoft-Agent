@@ -198,8 +198,7 @@ async function loadDocuments() {
         const fields = item.fields || {};
           const tr = document.createElement("tr");
           const dateStr = fields.Date ? new Date(fields.Date).toLocaleString() : "";
-          const rawType = fields.Type || "Others";
-          const docType = rawType.replace(/^Others-/, "Non-Hazardous-");
+          const docType = (fields.Type || "Others");
           const attachmentField = fields["DOXC Name"];
           let doxcName = "";
         let fileUrl = "";
