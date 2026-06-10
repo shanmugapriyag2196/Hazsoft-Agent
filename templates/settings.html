@@ -110,11 +110,37 @@
   transition: all 0.2s ease;
   font-family: inherit;
 }
-.form-group input:focus {
+.form-group.input:focus,
+.form-group select:focus {
   outline: none;
-  border-color: #f59e0b;
+  border-color: var(--blue);
   background: white;
-  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+.form-group {
+  position: relative;
+}
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+.password-toggle:hover {
+  color: var(--blue);
+}
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+.form-group input.has-toggle {
+  padding-right: 40px;
 }
 .form-actions {
   display: flex;
@@ -254,15 +280,33 @@
       <div class="form-grid">
         <div class="form-group">
           <label for="current-password">Current Password</label>
-          <input type="password" id="current-password" placeholder="Enter current password" required>
+          <input type="password" id="current-password" class="has-toggle" placeholder="Enter current password" required>
+          <button type="button" class="password-toggle" data-target="current-password" aria-label="Toggle password visibility">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
         </div>
         <div class="form-group">
           <label for="new-password">New Password</label>
-          <input type="password" id="new-password" placeholder="Enter new password" required minlength="6">
+          <input type="password" id="new-password" class="has-toggle" placeholder="Enter new password" required minlength="6">
+          <button type="button" class="password-toggle" data-target="new-password" aria-label="Toggle password visibility">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
         </div>
         <div class="form-group">
           <label for="confirm-password">Confirm Password</label>
-          <input type="password" id="confirm-password" placeholder="Confirm new password" required minlength="6">
+          <input type="password" id="confirm-password" class="has-toggle" placeholder="Confirm new password" required minlength="6">
+          <button type="button" class="password-toggle" data-target="confirm-password" aria-label="Toggle password visibility">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
         </div>
       </div>
       <div class="form-actions">
@@ -410,5 +454,18 @@ async function loadCurrentPassword() {
 }
 
 loadCurrentPassword();
+
+document.querySelectorAll('.password-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.getAttribute('data-target');
+    const input = document.getElementById(targetId);
+    if (!input) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    const eyeOff = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    const eyeOn = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    btn.querySelector('svg').innerHTML = isPassword ? eyeOff : eyeOn;
+  });
+});
 </script>
 {% endblock %}
