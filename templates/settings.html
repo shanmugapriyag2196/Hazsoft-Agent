@@ -134,6 +134,7 @@
   padding: 4px;
   color: var(--muted);
   transition: color 0.2s ease;
+  line-height: 0;
 }
 .password-wrapper .password-toggle:hover {
   color: var(--blue);
@@ -143,31 +144,9 @@
   height: 18px;
 }
 .form-group input {
-  padding-right: 40px;
+  padding-right: 14px;
 }
-.password-wrapper {
-  position: relative;
-}
-.password-wrapper .password-toggle {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  color: var(--muted);
-  transition: color 0.2s ease;
-}
-.password-wrapper .password-toggle:hover {
-  color: var(--blue);
-}
-.password-wrapper .password-toggle svg {
-  width: 18px;
-  height: 18px;
-}
-.password-wrapper input.has-toggle {
+#password-reset-form .form-group input {
   padding-right: 40px;
 }
 .form-actions {
