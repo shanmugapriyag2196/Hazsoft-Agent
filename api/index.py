@@ -89,6 +89,47 @@ class UserResponse(BaseModel):
     status: str
     # Note: password is not included in response for security
 
+
+def send_email(to: str, subject: str, html_content: str) -> bool:
+    """Send an email via Resend API. Returns True on success."""
+    if not RESEND_API_KEY:
+        print(f"[EMAIL SKIP] No RESEND_API_KEY configured. Would send to {to}: {subject}")
+        return False
+    try:
+        import resend
+        resend.api_key = RESEND_API_KEY
+        params = {
+            "from": f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>",
+            "to": [to],
+            "subject": subject,
+            "html": html_content,
+        }
+        result = resend.Emails.send(params)
+        print(f"[EMAIL SENT] id={result.get('id')} to={to} subject={subject}")
+        return True
+    except Exception as exc:
+        print(f"[EMAIL ERROR] {exc}")
+        return False
+
+def send_email(to: str, subject: str, html_content: str) -> bool:
+    if not RESEND_API_KEY:
+        print(f"[EMAIL SKIP] No RESEND_API_KEY. To={to}, Subject={subject}")
+        return False
+    try:
+        import resend
+        resend.api_key = RESEND_API_KEY
+        resend.Emails.send({
+            "from": f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>",
+            "to": [to],
+            "subject": subject,
+            "html": html_content,
+        })
+        print(f"[EMAIL SENT] To={to}, Subject={subject}")
+        return True
+    except Exception as exc:
+        print(f"[EMAIL ERROR] {exc}")
+        return False
+
 def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         print("Airtable: Missing API key or base ID")
@@ -446,108 +487,27 @@ def get_doxc_records() -> List[Dict]:
     url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
     headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
     try:
-        response = httpx.get(url, headers=headers, params={"pageSize": 100}, timeout=30.0)
+        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
         response.raise_for_status()
-        return response.json().get("records", [])
-    except Exception as e:
-        print(f"Failed to fetch DOXC records: {e}")
-        return []
+        result = response.json()
 
-def get_all_airtable_doxc_names() -> set:
-    records = get_doxc_records()
-    names = set()
-    for r in records:
-        doxc_field = r.get("fields", {}).get("DOXC Name")
-        if doxc_field:
-            if isinstance(doxc_field, list):
-                for item in doxc_field:
-                    if isinstance(item, dict) and item.get("filename"):
-                        names.add(item["filename"])
-            elif isinstance(doxc_field, str):
-                names.add(doxc_field)
-    return names
+        send_email(
+            to=user.email,
+            subject="Welcome to Hazsoft Agent – Your Account Has Been Created",
+            html_content=f"""<html><body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px">
+              <h2>Welcome, {user.fullName}!</h2>
+              <p>Your account has been created in <strong>Hazsoft Agent</strong>.</p>
+              <p><strong>Email:</strong> {user.email}</p>
+              <p><strong>Role:</strong> {user.role}</p>
+              <p><strong>Default Password:</strong> {user.password}</p>
+              <p>Please log in and change your password after first login.</p>
+              <p style="color:#666;font-size:13px">If you did not expect this, contact your administrator.</p>
+            </body></html>""",
+        )
 
-def get_chat_history(limit: int = 20) -> List[Dict]:
-    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
-        return []
-    encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
-    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
-    headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
-    params = {"pageSize": limit, "sort[0][field]": "Date", "sort[0][direction]": "desc"}
-    try:
-        response = httpx.get(url, headers=headers, params=params, timeout=30.0)
-        response.raise_for_status()
-        return response.json().get("records", [])
-    except httpx.HTTPStatusError as e:
-        print(f"Airtable history error - Status: {e.response.status_code}, Body: {e.response.text}")
-        return []
-    except Exception as e:
-        print(f"Airtable history error: {e}")
-        return []
-
-def determine_material_type(question: str, answer: str) -> str:
-    combined = (question + " " + answer).lower()
-    material_keywords = {
-        "Gas": ["gas", "propane", "butane", "natural gas", "hydrogen"],
-        "Chemicals": ["chemical", "solvent", "acid", "base", "reagent"],
-        "Cleaning Products": ["cleaning", "detergent", "soap", "disinfectant"],
-        "Laboratory Chemicals": ["lab", "laboratory", "lab chemical"]
-    }
-    for material, keywords in material_keywords.items():
-        if any(kw in combined for kw in keywords):
-            for kw in ["hazard", "danger", "warning", "dangerous", "toxic", "flammable",
-                      "corrosive", "explosive", "reactivity", "health hazard"]:
-                if kw in combined:
-                    return f"Hazardous-{material}"
-            return f"Non-Hazardous-{material}"
-    return "Others"
-
-@app.get("/", response_class=HTMLResponse)
-def index(request: Request):
-    return RedirectResponse(url="/login", status_code=303)
-
-@app.get("/logout")
-def logout():
-    response = RedirectResponse(url="/login", status_code=303)
-    response.delete_cookie("hazsoft_token")
-    response.delete_cookie("hazsoft_user")
-    return response
-
-@app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
-
-@app.get("/login", response_class=HTMLResponse)
-def login(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
-@app.get("/signup", response_class=HTMLResponse)
-def signup(request: Request):
-    return templates.TemplateResponse("signup.html", {"request": request})
-
-@app.get("/agent", response_class=HTMLResponse)
-def agent(request: Request):
-    return templates.TemplateResponse("agent.html", {"request": request, "has_agent": True})
-
-@app.get("/documents", response_class=HTMLResponse)
-def documents(request: Request):
-    return templates.TemplateResponse("documents.html", {"request": request})
-
-@app.get("/settings", response_class=HTMLResponse)
-def settings(request: Request):
-    return templates.TemplateResponse("settings.html", {"request": request})
-
-@app.get("/users", response_class=HTMLResponse)
-def users(request: Request):
-    print("Users route accessed")  # Debug line
-    return templates.TemplateResponse("users.html", {"request": request})
-
-@app.get("/api/documents")
-def api_documents():
-    try:
-        records = get_doxc_records()
-        return {"documents": records}
+        return result
     except Exception as exc:
+        print(f"Error in api_create_user: {exc}")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 @app.get("/api/stats")
@@ -690,7 +650,25 @@ def api_create_user(user: UserCreate):
         print(f"Airtable response status: {response.status_code}")
         print(f"Airtable response text: {response.text}")
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+
+        send_email(
+            to=user.email,
+            subject="Welcome to Hazsoft Agent – Your Account Has Been Created",
+            html_content=f"""
+            <html><body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px">
+              <h2>Welcome, {user.fullName}!</h2>
+              <p>Your account has been successfully created in <strong>Hazsoft Agent</strong>.</p>
+              <p><strong>Email:</strong> {user.email}</p>
+              <p><strong>Role:</strong> {user.role}</p>
+              <p><strong>Default Password:</strong> {user.password}</p>
+              <p>Please log in and change your password after first login.</p>
+              <p style="color:#666;font-size:13px">If you did not expect this message, please contact your administrator.</p>
+            </body></html>
+            """,
+        )
+
+        return result
     except Exception as exc:
         print(f"Error in api_create_user: {exc}")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -723,7 +701,23 @@ def api_update_user(user_id: str, user: UserCreate):
         
         response = httpx.put(url, headers=headers, json=payload, timeout=30.0)
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+
+        send_email(
+            to=user.email,
+            subject="Your Hazsoft Agent Password Has Been Changed",
+            html_content=f"""
+            <html><body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px">
+              <h2>Password Updated</h2>
+              <p>Hi {user.fullName},</p>
+              <p>Your password for <strong>Hazsoft Agent</strong> has been successfully changed.</p>
+              <p>If you did not request this change, please contact your administrator immediately.</p>
+              <p style="color:#666;font-size:13px">This is an automated security notification.</p>
+            </body></html>
+            """,
+        )
+
+        return result
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -761,6 +755,52 @@ def get_user_password(user_id: str):
         record = response.json()
         fields = record.get("fields", {})
         return {"password": fields.get("Password", "")}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+class PasswordResetRequest(BaseModel):
+    user_id: str
+    new_password: str
+
+
+@app.post("/api/users/reset-password")
+def reset_password(req: PasswordResetRequest):
+    try:
+        AIRTABLE_USERS_TABLE_ID = os.getenv("AIRTABLE_USER_TABLE_ID", "tbl1E5Pu8DpEAharu")
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
+            raise HTTPException(status_code=400, detail="Airtable not configured")
+        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe='')
+        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}/{req.user_id}"
+        headers = {
+            "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        payload = {"fields": {"Password": req.new_password}}
+        response = httpx.patch(url, headers=headers, json=payload, timeout=30.0)
+        response.raise_for_status()
+        record = response.json()
+        fields = record.get("fields", {})
+        user_email = fields.get("Email", "")
+        user_name = fields.get("FullName", "")
+
+        send_email(
+            to=user_email,
+            subject="Your Hazsoft Agent Password Has Been Reset",
+            html_content=f"""
+            <html><body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px">
+              <h2>Password Reset Confirmation</h2>
+              <p>Hi {user_name},</p>
+              <p>Your password for <strong>Hazsoft Agent</strong> has been successfully reset by an administrator.</p>
+              <p>Please log in with your new password and change it after login.</p>
+              <p style="color:#666;font-size:13px">If you did not request this change, please contact your administrator immediately.</p>
+            </body></html>
+            """,
+        )
+
+        return {"success": True, "message": "Password reset successfully"}
     except HTTPException:
         raise
     except Exception as exc:

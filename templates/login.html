@@ -98,6 +98,26 @@
   <div class="links">
     <a href="/signup">Create New Account</a>
   </div>
+  <div class="links" style="margin-top:6px">
+    <a href="#" id="forgot-link">Forgot Password?</a>
+  </div>
+
+  <div class="modal-overlay" id="forgot-modal">
+    <div class="modal-content">
+      <h3 style="margin:0 0 16px;font-size:18px">Reset Password</h3>
+      <p style="color:#666;font-size:14px;margin:0 0 20px">Enter your registered email to receive a temporary password.</p>
+      <div class="form-group">
+        <label for="forgot-email">Registered Email</label>
+        <input type="email" id="forgot-email" placeholder="you@example.com" required />
+      </div>
+      <div class="error-message" id="forgot-error" style="color:var(--red);font-size:13px;margin-top:8px"></div>
+      <div class="success-message" id="forgot-success" style="color:var(--green);font-size:13px;margin-top:8px;display:none"></div>
+      <div class="btn-row" style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+        <button class="btn-secondary" id="forgot-cancel" type="button">Cancel</button>
+        <button class="btn-primary" id="forgot-submit" type="button">Send Reset Link</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -118,11 +138,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   if (res.ok) {
     const data = await res.json();
     localStorage.setItem('hazsoft_user', JSON.stringify({
-      id: data.id,
-      FullName: data.fullName || '',
-      Email: data.email || '',
-      Role: data.role || '',
-      Status: data.status || ''
+      id: data.id, FullName: data.fullName||'', Email: data.email||'', Role: data.role||'', Status: data.status||''
     }));
     window.location.href = '/dashboard';
   } else {
@@ -130,5 +146,32 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     error.textContent = detail.detail || 'Login failed';
   }
 });
+
+const forgotLink = document.getElementById('forgot-link');
+const forgotModal = document.getElementById('forgot-modal');
+const forgotCancel = document.getElementById('forgot-cancel');
+const forgotSubmit = document.getElementById('forgot-submit');
+const forgotEmail = document.getElementById('forgot-email');
+const forgotError = document.getElementById('forgot-error');
+const forgotSuccess = document.getElementById('forgot-success');
+if (forgotLink && forgotModal) {
+  forgotLink.addEventListener('click', (e) => { e.preventDefault(); forgotModal.classList.add('active'); forgotError.textContent=''; forgotSuccess.style.display='none'; forgotEmail.value=''; });
+}
+if (forgotCancel) forgotCancel.addEventListener('click', () => forgotModal.classList.remove('active'));
+if (forgotModal) { forgotModal.addEventListener('click', (e) => { if (e.target === forgotModal) forgotModal.classList.remove('active'); }); }
+if (forgotSubmit) {
+  forgotSubmit.addEventListener('click', async () => {
+    const email = forgotEmail.value.trim();
+    if (!email) { forgotError.textContent = 'Please enter your email'; return; }
+    forgotError.textContent = ''; forgotSubmit.disabled = true; forgotSubmit.textContent = 'Sending...';
+    try {
+      const res = await fetch('/api/auth/forgot-password', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email}) });
+      const data = await res.json();
+      if (res.ok) { forgotSuccess.textContent = 'A temporary password has been sent to your email.'; forgotSuccess.style.display = 'block'; forgotEmail.value = ''; }
+      else { forgotError.textContent = data.detail || 'Reset failed'; }
+    } catch(err) { forgotError.textContent = 'Network error. Try again.'; }
+    finally { forgotSubmit.disabled = false; forgotSubmit.textContent = 'Send Reset Link'; }
+  });
+}
 </script>
 {% endblock %}

@@ -23,6 +23,10 @@ AIRTABLE_TABLE_ID = os.getenv("AIRTABLE_TABLE_ID", "")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", AIRTABLE_TABLE_ID or "Response_Data")
 AIRTABLE_DOC_TABLE_ID = os.getenv("AIRTABLE_DOC_TABLE_ID", "tblPtRp43f3w6k56X")
 
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "noreply@hazsoft.com")
+EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "Hazsoft Agent")
+
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "75"))
 
