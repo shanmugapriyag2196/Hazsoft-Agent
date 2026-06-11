@@ -47,9 +47,6 @@ AIRTABLE_TABLE_ID = os.getenv("AIRTABLE_TABLE_ID", "")
 AIRTABLE_TABLE_NAME = AIRTABLE_TABLE_ID or "Response_Data"
 AIRTABLE_TABLE = AIRTABLE_TABLE_ID or AIRTABLE_TABLE_NAME
 
-# Email config (SMTP)
-from config import EMAIL_FROM, EMAIL_FROM_NAME, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
-
 CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME", "")
 CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY", "")
 CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "")
@@ -94,29 +91,44 @@ class UserResponse(BaseModel):
 
 
 def send_email(to: str, subject: str, html_content: str) -> bool:
-    """Send an email via SMTP. Uses built-in smtplib + email libraries (no extra dependency)."""
-    if not SMTP_HOST or not SMTP_USER:
-        print(f"[EMAIL SKIP] SMTP not configured. To={to}, Subject={subject}")
+    """Send an email via Resend API. Returns True on success."""
+    if not RESEND_API_KEY:
+        print(f"[EMAIL SKIP] No RESEND_API_KEY configured. Would send to {to}: {subject}")
         return False
     try:
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-        msg = MIMEMultipart("alternative")
-        msg["From"] = f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>"
-        msg["To"] = to
-        msg["Subject"] = subject
-        msg.attach(MIMEText(html_content, "html"))
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.sendmail(EMAIL_FROM, [to], msg.as_string())
-        print(f"[EMAIL SENT] To={to}, Subject={subject}")
+        import resend
+        resend.api_key = RESEND_API_KEY
+        params = {
+            "from": f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>",
+            "to": [to],
+            "subject": subject,
+            "html": html_content,
+        }
+        result = resend.Emails.send(params)
+        print(f"[EMAIL SENT] id={result.get('id')} to={to} subject={subject}")
         return True
     except Exception as exc:
         print(f"[EMAIL ERROR] {exc}")
         return False
 
+def send_email(to: str, subject: str, html_content: str) -> bool:
+    if not RESEND_API_KEY:
+        print(f"[EMAIL SKIP] No RESEND_API_KEY. To={to}, Subject={subject}")
+        return False
+    try:
+        import resend
+        resend.api_key = RESEND_API_KEY
+        resend.Emails.send({
+            "from": f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>",
+            "to": [to],
+            "subject": subject,
+            "html": html_content,
+        })
+        print(f"[EMAIL SENT] To={to}, Subject={subject}")
+        return True
+    except Exception as exc:
+        print(f"[EMAIL ERROR] {exc}")
+        return False
 
 def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
@@ -945,65 +957,6 @@ def api_login_user(user: UserLogin):
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-
-
-class ForgotPasswordRequest(BaseModel):
-    email: str
-
-
-@app.post("/api/auth/forgot-password")
-def api_forgot_password(req: ForgotPasswordRequest):
-    try:
-        AIRTABLE_USERS_TABLE_ID = os.getenv("AIRTABLE_USER_TABLE_ID", "tbl1E5Pu8DpEAharu")
-        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID or not AIRTABLE_USERS_TABLE_ID:
-            raise HTTPException(status_code=400, detail="Airtable not configured")
-
-        encoded_table = urllib.parse.quote(AIRTABLE_USERS_TABLE_ID, safe="")
-        url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
-        headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
-
-        params = {"filterByFormula": f"{{Email}} = '{req.email}'"}
-        response = httpx.get(url, headers=headers, params=params, timeout=30.0)
-        response.raise_for_status()
-        data = response.json()
-
-        if not data.get("records"):
-            raise HTTPException(status_code=404, detail="No account found with that email")
-
-        record = data["records"][0]
-        fields = record.get("fields", {})
-        user_id = record["id"]
-        user_name = fields.get("FullName", req.email)
-
-        import secrets, string
-        temp_password = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
-
-        patch_url = f"{url}/{user_id}"
-        patch_headers = {
-            "Authorization": f"Bearer {AIRTABLE_API_KEY}",
-            "Content-Type": "application/json",
-        }
-        patch_resp = httpx.patch(patch_url, headers=patch_headers, json={"fields": {"Password": temp_password}}, timeout=30.0)
-        patch_resp.raise_for_status()
-
-        send_email(
-            to=req.email,
-            subject="Hazsoft Agent - Password Reset",
-            html_content=f"""<html><body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px">
-              <h2>Password Reset</h2>
-              <p>Hi {user_name},</p>
-              <p>Your temporary password is: <strong>{temp_password}</strong></p>
-              <p>Log in with this password, then change it from Settings.</p>
-              <p style="color:#666;font-size:13px">If you did not request this, contact your administrator.</p>
-            </body></html>""",
-        )
-
-        return {"success": True, "message": "Temporary password sent to your email"}
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-
 
 @app.post("/admin/ingest")
 def admin_ingest_post():
