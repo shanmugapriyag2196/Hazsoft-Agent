@@ -78,19 +78,13 @@
       letter-spacing: -0.02em;
       padding: 0 4px;
     }
-    .brand-mark {
+    .brand-logo {
       width: 42px;
       height: 42px;
       border-radius: 14px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #ffffff, #e2e8f0);
-      color: var(--nav);
-      font-weight: 900;
-      font-size: 18px;
-      box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.15),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+      object-fit: contain;
+      background: rgba(255,255,255,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     nav {
       display: flex;
@@ -206,7 +200,10 @@
 <body class="{% block body_class %}{% endblock %}">
 <div class="shell{% if has_agent %} has-agent{% endif %}">
   <aside>
-    <div class="brand"><span class="brand-mark">H</span><span>Hazsoft Agent</span></div>
+    <div class="brand">
+      <img class="brand-logo" src="/static/Hazsoft%20Logo.png" alt="Hazsoft Logo" onerror="this.style.display='none'" />
+      <span>Hazsoft Agent</span>
+    </div>
     <nav aria-label="SDS navigation">
       <button class="nav-item active" data-page="main" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg>
