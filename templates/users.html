@@ -503,7 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
       email: email,
       role: roleField.value,
       status: statusField.value,
-      password: 'temp123'
+      password: passwordField.value || 'temp123'
     };
 
     const isEdit = !!userIdField.value;
