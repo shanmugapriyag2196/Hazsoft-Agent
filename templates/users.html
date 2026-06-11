@@ -453,6 +453,10 @@
             <option value="Inactive">Inactive</option>
           </select>
         </div>
+        <div class="form-group">
+          <label for="user-password">Password</label>
+          <input type="text" id="user-password" placeholder="Enter password" />
+        </div>
       </form>
     </div>
     <div class="modal-footer">
@@ -477,6 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const emailField = document.getElementById('user-email');
   const roleField = document.getElementById('user-role');
   const statusField = document.getElementById('user-status');
+  const passwordField = document.getElementById('user-password');
 
   addBtn.addEventListener('click', () => openModal('add'));
   modalClose.addEventListener('click', closeModal);

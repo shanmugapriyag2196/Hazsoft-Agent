@@ -825,10 +825,12 @@ def delete_history(record_id: str):
 
 @app.get("/health")
 def health():
+    status = {"status": "ok", "rag": None}
     try:
-        return rag_status()
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        status["rag"] = rag_status()
+    except Exception:
+        status["rag"] = "unavailable"
+    return status
 
 @app.post("/api/auth/register")
 def api_register_user(user: UserCreate):
@@ -915,6 +917,10 @@ def api_login_user(user: UserLogin):
             role=fields.get("Role", ""),
             status=fields.get("Status", "")
         )
+    except httpx.HTTPStatusError:
+        raise
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
