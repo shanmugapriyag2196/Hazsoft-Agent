@@ -184,7 +184,7 @@ def index_chunks(pdf_folder: Path, batch_size: int = 64) -> int:
     return len(chunks)
 
 
-def search(question: str, top_k: int = TOP_K) -> List[Dict[str, object]]:
+def search(question: str, top_k: int = TOP_K, weight: float = 1.0) -> List[Dict[str, object]]:
     openai_client = get_openai_client()
     qdrant_client = get_qdrant_client()
     if not collection_exists(qdrant_client):
@@ -214,13 +214,24 @@ def search(question: str, top_k: int = TOP_K) -> List[Dict[str, object]]:
             ) from exc
         raise
 
+    question_terms = set(question.lower().split())
     results: List[Dict[str, object]] = []
-    for hit in hits:
+    for rank, hit in enumerate(hits, start=1):
         payload = hit.payload or {}
+        text = payload.get("text", "") or ""
+        text_terms = set(text.lower().split())
+        matched_terms = len(question_terms & text_terms)
+        total_terms = len(question_terms) if question_terms else 1
+        keyword_score = matched_terms / total_terms
+        semantic_score = hit.score if hit.score is not None else 0.0
+        base_score = (keyword_score * 0.3) + (semantic_score * 0.7)
+        search_score = base_score * weight
         results.append(
             {
                 "score": hit.score,
-                "text": payload.get("text", ""),
+                "search_score": search_score,
+                "rank": rank,
+                "text": text,
                 "source": payload.get("source", ""),
                 "page": payload.get("page", ""),
                 "chunk_index": payload.get("chunk_index", ""),
@@ -229,8 +240,8 @@ def search(question: str, top_k: int = TOP_K) -> List[Dict[str, object]]:
     return results
 
 
-def answer_question(question: str) -> Dict[str, object]:
-    contexts = search(question)
+def answer_question(question: str, weight: float = 1.0) -> Dict[str, object]:
+    contexts = search(question, weight=weight)
     context_text = "\n\n".join(
         f"Source: {item['source']} | Page: {item['page']} | Chunk: {item['chunk_index']}\n{item['text']}"
         for item in contexts

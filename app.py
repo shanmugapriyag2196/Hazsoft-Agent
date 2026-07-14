@@ -49,7 +49,7 @@ FEEDBACK_FILE = Path("feedback.jsonl")
 
 
 def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: float) -> Optional[Dict]:
-    """Save feedback to Airtable."""
+    """Save feedback to Airtable with aggregated counts."""
     import httpx
     import urllib.parse
 
@@ -63,31 +63,115 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json",
     }
-    payload = {
-        "records": [{
-            "fields": {
-                "Question": question,
-                "Response": answer,
-                "Type": "Feedback",
-                "Date": datetime.datetime.now().isoformat(),
-                "Feedback": feedback,
-                "Score": score,
-            }
-        }]
+
+    existing_record_id = None
+    thumbs_up = 0
+    thumbs_down = 0
+    existing_score = 1.0
+
+    try:
+        safe_question = question.replace("'", "\\'")
+        safe_answer = answer.replace("'", "\\'")
+        filter_formula = f"AND({{Question}}='{safe_question}',{{Response}}='{safe_answer}')"
+        response = httpx.get(
+            url,
+            headers=headers,
+            params={"filterByFormula": filter_formula, "pageSize": 1},
+            timeout=30.0,
+        )
+        response.raise_for_status()
+        records = response.json().get("records", [])
+        if records:
+            existing = records[0]
+            existing_record_id = existing.get("id")
+            fields = existing.get("fields", {})
+            thumbs_up = int(fields.get("ThumbsUpCount", 0) or 0)
+            thumbs_down = int(fields.get("ThumbsDownCount", 0) or 0)
+            existing_score = float(fields.get("Score", 1.0) or 1.0)
+    except Exception as e:
+        print(f"Airtable feedback lookup error: {e}")
+
+    if feedback == "up":
+        thumbs_up += 1
+    elif feedback == "down":
+        thumbs_down += 1
+
+    total_interactions = thumbs_up + thumbs_down
+    computed_score = 1.0 + (thumbs_up * 0.15) - (thumbs_down * 0.15)
+
+    fields = {
+        "Question": question,
+        "Response": answer,
+        "Type": "Feedback",
+        "Date": datetime.datetime.now().isoformat(),
+        "Feedback": feedback,
+        "Score": computed_score,
+        "ThumbsUpCount": thumbs_up,
+        "ThumbsDownCount": thumbs_down,
+        "TotalInteractions": total_interactions,
     }
 
     try:
-        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
+        if existing_record_id:
+            response = httpx.patch(
+                f"{url}/{existing_record_id}",
+                headers=headers,
+                json={"fields": fields},
+                timeout=30.0,
+            )
+        else:
+            response = httpx.post(url, headers=headers, json={"records": [{"fields": fields}]}, timeout=30.0)
         response.raise_for_status()
         result = response.json()
         print(f"Airtable feedback save success: {result}")
-        return result
+        return {
+            "status": "saved",
+            "score": computed_score,
+            "thumbs_up": thumbs_up,
+            "thumbs_down": thumbs_down,
+            "total_interactions": total_interactions,
+            "fetch_more": feedback == "up",
+        }
     except httpx.HTTPStatusError as e:
         print(f"Airtable feedback save error - Status: {e.response.status_code}, Body: {e.response.text}")
         return None
     except Exception as e:
         print(f"Airtable feedback save error: {e}")
         return None
+
+
+def get_feedback_weight(question: str, answer: str) -> float:
+    """Get feedback weight from Airtable for a Q&A pair."""
+    import httpx
+    import urllib.parse
+
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
+        return 1.0
+
+    encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+    headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+
+    try:
+        safe_question = question.replace("'", "\\'")
+        safe_answer = answer.replace("'", "\\'")
+        filter_formula = f"AND({{Question}}='{safe_question}',{{Response}}='{safe_answer}')"
+        response = httpx.get(
+            url,
+            headers=headers,
+            params={"filterByFormula": filter_formula, "pageSize": 1},
+            timeout=30.0,
+        )
+        response.raise_for_status()
+        records = response.json().get("records", [])
+        if records:
+            fields = records[0].get("fields", {})
+            score = float(fields.get("Score", 1.0) or 1.0)
+            return max(0.1, min(3.0, score))
+    except Exception as e:
+        print(f"Airtable weight lookup error: {e}")
+
+    return 1.0
 
 
 def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
@@ -320,7 +404,9 @@ def feedback(request: FeedbackRequest):
         }
         with FEEDBACK_FILE.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
-        save_feedback_to_airtable(request.question, request.answer, request.feedback, score)
+        result = save_feedback_to_airtable(request.question, request.answer, request.feedback, score)
+        if result:
+            return result
         return {"status": "saved", "score": score, "fetch_more": request.feedback == "up"}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

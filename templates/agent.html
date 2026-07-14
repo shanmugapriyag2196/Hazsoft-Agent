@@ -216,6 +216,11 @@
   color: var(--muted);
   margin-left: 6px;
 }
+.feedback-metrics {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
 .sources {
   margin-top: 12px;
   padding-top: 12px;
@@ -223,6 +228,13 @@
   color: var(--muted);
   font-size: 13px;
   white-space: normal;
+}
+.source-item {
+  margin-bottom: 4px;
+}
+.source-score {
+  font-size: 11px;
+  color: #64748b;
 }
 .more-button {
   min-height: 36px;
@@ -428,10 +440,13 @@ function addMessage(text, role, sources, question) {
   if (sources && sources.length) {
     const sourceNode = document.createElement("div");
     sourceNode.className = "sources";
-    sourceNode.textContent = "Sources: " + sources
-      .map(item => `${item.source} p.${item.page}`)
-      .filter(Boolean)
-      .join("; ");
+    sourceNode.innerHTML = sources
+      .map(item => {
+        const scoreText = item.search_score !== undefined ? ` | SearchScore: ${item.search_score.toFixed(3)}` : "";
+        const rankText = item.rank ? ` | Rank: ${item.rank}` : "";
+        return `<div class="source-item">${item.source} p.${item.page}${scoreText}${rankText}</div>`;
+      })
+      .join("");
     node.appendChild(sourceNode);
   }
 
@@ -470,26 +485,35 @@ function addMessage(text, role, sources, question) {
       upBtn.disabled = true;
       downBtn.disabled = true;
       try {
-        await fetch("/feedback", {
+        const response = await fetch("/feedback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question: question || "", answer: text, feedback: value }),
         });
+        const data = await response.json();
         if (value === "up") {
           upBtn.classList.add("active-like");
+          const metrics = document.createElement("div");
+          metrics.className = "feedback-metrics";
+          metrics.textContent = `👍 ${data.thumbs_up || 0} | 👎 ${data.thumbs_down || 0} | Score: ${(data.score || 0).toFixed(2)} | Interactions: ${data.total_interactions || 0}`;
+          feedback.appendChild(metrics);
           status.textContent = "Fetching more details...";
           const followUpQuestion = `Original question: ${question}\n\nThe user liked the previous answer. Using ONLY the indexed SDS context, provide additional important details, examples, or missing safety information to supplement the previous response.`;
-          const response = await fetch("/chat", {
+          const chatResponse = await fetch("/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ question: followUpQuestion }),
           });
-          const data = await response.json();
-          if (response.ok) {
-            addMessage(data.answer, "assistant", data.sources, question);
+          const chatData = await chatResponse.json();
+          if (chatResponse.ok) {
+            addMessage(chatData.answer, "assistant", chatData.sources, question);
           }
         } else {
           downBtn.classList.add("active-dislike");
+          const metrics = document.createElement("div");
+          metrics.className = "feedback-metrics";
+          metrics.textContent = `👍 ${data.thumbs_up || 0} | 👎 ${data.thumbs_down || 0} | Score: ${(data.score || 0).toFixed(2)} | Interactions: ${data.total_interactions || 0}`;
+          feedback.appendChild(metrics);
           status.textContent = "Noted";
         }
       } catch {
