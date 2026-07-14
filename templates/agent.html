@@ -506,7 +506,13 @@ function addMessage(text, role, sources, question) {
           });
           const chatData = await chatResponse.json();
           if (chatResponse.ok) {
+            const combinedResponse = `${text}\n\n${chatData.answer}`;
             addMessage(chatData.answer, "assistant", chatData.sources, question);
+            await fetch("/feedback", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ question: question || "", answer: text, feedback: value, combined_response: combinedResponse }),
+            });
           }
         } else {
           downBtn.classList.add("active-dislike");

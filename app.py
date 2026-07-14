@@ -43,6 +43,7 @@ class FeedbackRequest(BaseModel):
     answer: str
     feedback: str
     score: float = 0.0
+    combined_response: str = ""
 
 
 FEEDBACK_FILE = Path("feedback.jsonl")
@@ -443,7 +444,7 @@ def feedback(request: FeedbackRequest):
         }
         with FEEDBACK_FILE.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
-        result = save_feedback_to_airtable(request.question, request.answer, request.feedback, score)
+        result = save_feedback_to_airtable(request.question, request.answer, request.feedback, score, request.combined_response)
         if result:
             return result
         return {"status": "saved", "score": score, "fetch_more": request.feedback == "up"}
