@@ -72,8 +72,7 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
 
     try:
         safe_question = question.replace("'", "\\'")
-        safe_answer = answer.replace("'", "\\'")
-        filter_formula = f"AND({{Question}}='{safe_question}',{{Response}}='{safe_answer}')"
+        filter_formula = f"{{Question}}='{safe_question}'"
         response = httpx.get(
             url,
             headers=headers,
@@ -88,6 +87,15 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
             fields = existing.get("fields", {})
             thumbs_up = int(fields.get("ThumbsUpCount", 0) or 0)
             thumbs_down = int(fields.get("ThumbsDownCount", 0) or 0)
+            if not thumbs_up and not thumbs_down:
+                existing_response = fields.get("Response", "")
+                import re
+                up_match = re.search(r"ThumbsUp=(\d+)", existing_response)
+                down_match = re.search(r"ThumbsDown=(\d+)", existing_response)
+                if up_match:
+                    thumbs_up = int(up_match.group(1))
+                if down_match:
+                    thumbs_down = int(down_match.group(1))
             existing_score = float(fields.get("Score", 1.0) or 1.0)
     except Exception as e:
         print(f"Airtable feedback lookup error: {e}")
@@ -194,8 +202,7 @@ def get_feedback_weight(question: str, answer: str) -> float:
 
     try:
         safe_question = question.replace("'", "\\'")
-        safe_answer = answer.replace("'", "\\'")
-        filter_formula = f"AND({{Question}}='{safe_question}',{{Response}}='{safe_answer}')"
+        filter_formula = f"{{Question}}='{safe_question}'"
         response = httpx.get(
             url,
             headers=headers,
@@ -214,7 +221,7 @@ def get_feedback_weight(question: str, answer: str) -> float:
     return 1.0
 
 
-def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
+def save_to_airtable(question: str, answer: str, material_type: str = "", search_score: float = 0.0, rank: int = 0) -> Optional[Dict]:
     """Save chat to Airtable. Returns None if Airtable not configured."""
     import httpx
     import urllib.parse
@@ -229,14 +236,19 @@ def save_to_airtable(question: str, answer: str, material_type: str = "") -> Opt
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json",
     }
+    fields = {
+        "Question": question,
+        "Response": answer,
+        "Type": material_type,
+        "Date": datetime.datetime.now().isoformat(),
+    }
+    if search_score:
+        fields["SearchScore"] = search_score
+    if rank:
+        fields["Rank"] = rank
     payload = {
         "records": [{
-            "fields": {
-                "Question": question,
-                "Response": answer,
-                "Type": material_type,
-                "Date": datetime.datetime.now().isoformat(),
-            }
+            "fields": fields
         }]
     }
 
@@ -424,7 +436,10 @@ def chat(request: ChatRequest):
     try:
         result = answer_question(question)
         material_type = determine_material_type(question, result.get("answer", ""))
-        save_to_airtable(question, result["answer"], material_type)
+        sources = result.get("sources", [])
+        search_score = sources[0].get("search_score", 0.0) if sources else 0.0
+        rank = sources[0].get("rank", 0) if sources else 0
+        save_to_airtable(question, result["answer"], material_type, search_score, rank)
         return result
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
