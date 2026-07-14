@@ -76,10 +76,11 @@ class FeedbackRequest(BaseModel):
     answer: str
     feedback: str
     score: float = 0.0
+    update_only: bool = False
 
 FEEDBACK_FILE = Path("/tmp/feedback.jsonl") if VERCEL else Path("feedback.jsonl")
 
-def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: float) -> Optional[Dict]:
+def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: float, update_only: bool = False) -> Optional[Dict]:
     """Save feedback to Airtable with aggregated counts."""
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         print("Airtable: Missing API key or base ID for feedback")
@@ -124,10 +125,11 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
     except Exception as e:
         print(f"Airtable feedback lookup error: {e}")
 
-    if feedback == "up":
-        thumbs_up += 1
-    elif feedback == "down":
-        thumbs_down += 1
+    if not update_only:
+        if feedback == "up":
+            thumbs_up += 1
+        elif feedback == "down":
+            thumbs_down += 1
 
     total_interactions = thumbs_up + thumbs_down
     computed_score = 1.0 + (thumbs_up * 0.15) - (thumbs_down * 0.15)
@@ -993,7 +995,7 @@ def feedback(request: FeedbackRequest):
         }
         with FEEDBACK_FILE.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
-        airtable_result = save_feedback_to_airtable(request.question, request.answer, request.feedback, score)
+        airtable_result = save_feedback_to_airtable(request.question, request.answer, request.feedback, score, request.update_only)
         response_payload = {
             "status": "saved",
             "score": score,

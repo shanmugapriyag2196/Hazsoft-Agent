@@ -43,19 +43,156 @@ class FeedbackRequest(BaseModel):
     answer: str
     feedback: str
     score: float = 0.0
-    combined_response: str = ""
+    update_only: bool = False
 
 
 FEEDBACK_FILE = Path("feedback.jsonl")
 
 
-def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: float) -> Optional[Dict]:
+def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: float, update_only: bool = False) -> Optional[Dict]:
     """Save feedback to Airtable with aggregated counts."""
     import httpx
     import urllib.parse
 
     if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
         print("Airtable: Missing API key or base ID for feedback")
+        return None
+
+    encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    existing_record_id = None
+    thumbs_up = 0
+    thumbs_down = 0
+    existing_score = 1.0
+    existing_search_score = 0.0
+    existing_rank = 0
+
+    try:
+        safe_question = question.replace("'", "\\'")
+        filter_formula = f"{{Question}}='{safe_question}'"
+        response = httpx.get(
+            url,
+            headers=headers,
+            params={"filterByFormula": filter_formula, "pageSize": 1},
+            timeout=30.0,
+        )
+        response.raise_for_status()
+        records = response.json().get("records", [])
+        if records:
+            existing = records[0]
+            existing_record_id = existing.get("id")
+            fields = existing.get("fields", {})
+            thumbs_up = int(fields.get("ThumbsUpCount", 0) or 0)
+            thumbs_down = int(fields.get("ThumbsDownCount", 0) or 0)
+            existing_score = float(fields.get("Score", 1.0) or 1.0)
+            existing_search_score = float(fields.get("SearchScore", 0.0) or 0.0)
+            existing_rank = int(fields.get("Rank", 0) or 0)
+            if not thumbs_up and not thumbs_down:
+                existing_response = fields.get("Response", "")
+                import re
+                up_match = re.search(r"ThumbsUp=(\d+)", existing_response)
+                down_match = re.search(r"ThumbsDown=(\d+)", existing_response)
+                if up_match:
+                    thumbs_up = int(up_match.group(1))
+                if down_match:
+                    thumbs_down = int(down_match.group(1))
+    except Exception as e:
+        print(f"Airtable feedback lookup error: {e}")
+
+    if not update_only:
+        if feedback == "up":
+            thumbs_up += 1
+        elif feedback == "down":
+            thumbs_down += 1
+
+    total_interactions = thumbs_up + thumbs_down
+    computed_score = 1.0 + (thumbs_up * 0.15) - (thumbs_down * 0.15)
+
+    fields = {
+        "Question": question,
+        "Response": answer,
+        "Type": "Feedback",
+        "Date": datetime.datetime.now().isoformat(),
+        "Score": computed_score,
+        "ThumbsUpCount": thumbs_up,
+        "ThumbsDownCount": thumbs_down,
+        "TotalInteractions": total_interactions,
+        "SearchScore": existing_search_score,
+        "Rank": existing_rank,
+    }
+
+    try:
+        if existing_record_id:
+            response = httpx.patch(
+                f"{url}/{existing_record_id}",
+                headers=headers,
+                json={"fields": fields},
+                timeout=30.0,
+            )
+        else:
+            response = httpx.post(url, headers=headers, json={"records": [{"fields": fields}]}, timeout=30.0)
+        
+        if response.status_code in (200, 201):
+            result = response.json()
+            print(f"Airtable feedback save success: {result}")
+            return {
+                "status": "saved",
+                "score": computed_score,
+                "thumbs_up": thumbs_up,
+                "thumbs_down": thumbs_down,
+                "total_interactions": total_interactions,
+                "fetch_more": feedback == "up",
+            }
+        
+        # If fields don't exist in Airtable, retry without unknown fields and append metrics to Response
+        if response.status_code == 422:
+            error_msg = response.text
+            if "UNKNOWN_FIELD_NAME" in error_msg:
+                print(f"Airtable unknown field, retrying with fallback: {error_msg}")
+                fallback_response = f"{answer} | [Metrics: ThumbsUp={thumbs_up}, ThumbsDown={thumbs_down}, Score={computed_score}, Interactions={total_interactions}]"
+                fallback_fields = {
+                    "Question": question,
+                    "Response": fallback_response,
+                    "Type": "Feedback",
+                    "Date": datetime.datetime.now().isoformat(),
+                    "Score": computed_score,
+                    "TotalInteractions": total_interactions,
+                }
+                if existing_record_id:
+                    response = httpx.patch(
+                        f"{url}/{existing_record_id}",
+                        headers=headers,
+                        json={"fields": fallback_fields},
+                        timeout=30.0,
+                    )
+                else:
+                    response = httpx.post(url, headers=headers, json={"records": [{"fields": fallback_fields}]}, timeout=30.0)
+                
+                if response.status_code in (200, 201):
+                    result = response.json()
+                    print(f"Airtable feedback save success (fallback): {result}")
+                    return {
+                        "status": "saved",
+                        "score": computed_score,
+                        "thumbs_up": thumbs_up,
+                        "thumbs_down": thumbs_down,
+                        "total_interactions": total_interactions,
+                        "fetch_more": feedback == "up",
+                        "note": "ThumbsUpCount/ThumbsDownCount fields missing in Airtable. Metrics stored in Response field.",
+                    }
+        
+        response.raise_for_status()
+        return None
+    except httpx.HTTPStatusError as e:
+        print(f"Airtable feedback save error - Status: {e.response.status_code}, Body: {e.response.text}")
+        return None
+    except Exception as e:
+        print(f"Airtable feedback save error: {e}")
         return None
 
     encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
@@ -459,7 +596,7 @@ def feedback(request: FeedbackRequest):
         }
         with FEEDBACK_FILE.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
-        result = save_feedback_to_airtable(request.question, request.answer, request.feedback, score, request.combined_response)
+        result = save_feedback_to_airtable(request.question, request.answer, request.feedback, score, request.update_only)
         if result:
             return result
         return {"status": "saved", "score": score, "fetch_more": request.feedback == "up"}
