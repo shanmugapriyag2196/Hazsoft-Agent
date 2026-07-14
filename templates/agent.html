@@ -181,6 +181,41 @@
   overflow-y: auto;
   padding-right: 12px;
 }
+.feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+.feedback-btn {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+.feedback-btn:hover {
+  background: rgba(5, 150, 105, 0.08);
+  color: var(--green);
+}
+.feedback-btn.active-like {
+  background: rgba(5, 150, 105, 0.12);
+  color: var(--green);
+  border-color: #86c9b8;
+}
+.feedback-btn.active-dislike {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+.feedback-status {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 6px;
+}
 .sources {
   margin-top: 12px;
   padding-top: 12px;
@@ -356,7 +391,7 @@ async function loadHistory() {
         div.addEventListener("click", (e) => {
           if (e.target.classList.contains("delete-btn")) return;
           addMessage(div.dataset.question, "user");
-          addMessage(div.dataset.response, "assistant");
+          addMessage(div.dataset.response, "assistant", [], div.dataset.question);
         });
 
         div.querySelector(".delete-btn").addEventListener("click", async (e) => {
@@ -381,7 +416,7 @@ async function loadHistory() {
   }
 }
 
-function addMessage(text, role, sources) {
+function addMessage(text, role, sources, question) {
   const node = document.createElement("div");
   node.className = `message ${role}`;
 
@@ -417,6 +452,57 @@ function addMessage(text, role, sources) {
     node.appendChild(moreButton);
   }
 
+  if (role === "assistant") {
+    const feedback = document.createElement("div");
+    feedback.className = "feedback";
+    feedback.innerHTML = `
+      <button class="feedback-btn" data-value="up" title="Thumbs up">&#128077;</button>
+      <button class="feedback-btn" data-value="down" title="Thumbs down">&#128078;</button>
+      <span class="feedback-status"></span>
+    `;
+    node.appendChild(feedback);
+
+    const upBtn = feedback.querySelector('[data-value="up"]');
+    const downBtn = feedback.querySelector('[data-value="down"]');
+    const status = feedback.querySelector(".feedback-status");
+
+    const submitFeedback = async (value) => {
+      upBtn.disabled = true;
+      downBtn.disabled = true;
+      try {
+        await fetch("/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: question || "", answer: text, feedback: value }),
+        });
+        if (value === "up") {
+          upBtn.classList.add("active-like");
+          status.textContent = "Fetching more details...";
+          const followUpQuestion = `Original question: ${question}\n\nThe user liked the previous answer. Using ONLY the indexed SDS context, provide additional important details, examples, or missing safety information to supplement the previous response.`;
+          const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: followUpQuestion }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            addMessage(data.answer, "assistant", data.sources, question);
+          }
+        } else {
+          downBtn.classList.add("active-dislike");
+          status.textContent = "Noted";
+        }
+      } catch {
+        status.textContent = "Failed to save feedback";
+        upBtn.disabled = false;
+        downBtn.disabled = false;
+      }
+    };
+
+    upBtn.addEventListener("click", () => submitFeedback("up"));
+    downBtn.addEventListener("click", () => submitFeedback("down"));
+  }
+
   chat.scrollTop = chat.scrollHeight;
   return node;
 }
@@ -440,7 +526,7 @@ form.addEventListener("submit", async (event) => {
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || "Request failed");
     pending.remove();
-    addMessage(data.answer, "assistant", data.sources);
+    addMessage(data.answer, "assistant", data.sources, question);
     loadHistory();
   } catch (error) {
     pending.querySelector(".message-text").textContent = `Error: ${error.message}`;

@@ -3,7 +3,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import datetime
+import json
 import shutil
+from pathlib import Path
 from typing import Optional, Dict, List
 
 import base64
@@ -34,6 +36,58 @@ class ChatHistoryItem(BaseModel):
     question: str
     answer: str
     type: str = ""
+
+
+class FeedbackRequest(BaseModel):
+    question: str
+    answer: str
+    feedback: str
+    score: float = 0.0
+
+
+FEEDBACK_FILE = Path("feedback.jsonl")
+
+
+def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: float) -> Optional[Dict]:
+    """Save feedback to Airtable."""
+    import httpx
+    import urllib.parse
+
+    if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
+        print("Airtable: Missing API key or base ID for feedback")
+        return None
+
+    encoded_table = urllib.parse.quote(AIRTABLE_TABLE, safe='')
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{encoded_table}"
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "records": [{
+            "fields": {
+                "Question": question,
+                "Response": answer,
+                "Type": "Feedback",
+                "Date": datetime.datetime.now().isoformat(),
+                "Feedback": feedback,
+                "Score": score,
+            }
+        }]
+    }
+
+    try:
+        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
+        response.raise_for_status()
+        result = response.json()
+        print(f"Airtable feedback save success: {result}")
+        return result
+    except httpx.HTTPStatusError as e:
+        print(f"Airtable feedback save error - Status: {e.response.status_code}, Body: {e.response.text}")
+        return None
+    except Exception as e:
+        print(f"Airtable feedback save error: {e}")
+        return None
 
 
 def save_to_airtable(question: str, answer: str, material_type: str = "") -> Optional[Dict]:
@@ -248,6 +302,26 @@ def chat(request: ChatRequest):
         material_type = determine_material_type(question, result.get("answer", ""))
         save_to_airtable(question, result["answer"], material_type)
         return result
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/feedback")
+def feedback(request: FeedbackRequest):
+    score = 0.15 if request.feedback == "up" else -0.15 if request.feedback == "down" else request.score
+    try:
+        FEEDBACK_FILE.parent.mkdir(parents=True, exist_ok=True)
+        record = {
+            "question": request.question,
+            "answer": request.answer,
+            "feedback": request.feedback,
+            "score": score,
+            "timestamp": datetime.datetime.now().isoformat(),
+        }
+        with FEEDBACK_FILE.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        save_feedback_to_airtable(request.question, request.answer, request.feedback, score)
+        return {"status": "saved", "score": score, "fetch_more": request.feedback == "up"}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
