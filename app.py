@@ -104,7 +104,6 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
         "Response": answer,
         "Type": "Feedback",
         "Date": datetime.datetime.now().isoformat(),
-        "Feedback": feedback,
         "Score": computed_score,
         "ThumbsUpCount": thumbs_up,
         "ThumbsDownCount": thumbs_down,
@@ -121,17 +120,55 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
             )
         else:
             response = httpx.post(url, headers=headers, json={"records": [{"fields": fields}]}, timeout=30.0)
+        
+        if response.status_code in (200, 201):
+            result = response.json()
+            print(f"Airtable feedback save success: {result}")
+            return {
+                "status": "saved",
+                "score": computed_score,
+                "thumbs_up": thumbs_up,
+                "thumbs_down": thumbs_down,
+                "total_interactions": total_interactions,
+                "fetch_more": feedback == "up",
+            }
+        
+        # If fields don't exist in Airtable, retry with basic fields only
+        if response.status_code == 422:
+            error_msg = response.text
+            if "UNKNOWN_FIELD_NAME" in error_msg:
+                print(f"Airtable unknown field, retrying with basic fields only: {error_msg}")
+                basic_fields = {
+                    "Question": question,
+                    "Response": answer,
+                    "Type": "Feedback",
+                    "Date": datetime.datetime.now().isoformat(),
+                }
+                if existing_record_id:
+                    response = httpx.patch(
+                        f"{url}/{existing_record_id}",
+                        headers=headers,
+                        json={"fields": basic_fields},
+                        timeout=30.0,
+                    )
+                else:
+                    response = httpx.post(url, headers=headers, json={"records": [{"fields": basic_fields}]}, timeout=30.0)
+                
+                if response.status_code in (200, 201):
+                    result = response.json()
+                    print(f"Airtable feedback save success (basic fields): {result}")
+                    return {
+                        "status": "saved",
+                        "score": computed_score,
+                        "thumbs_up": thumbs_up,
+                        "thumbs_down": thumbs_down,
+                        "total_interactions": total_interactions,
+                        "fetch_more": feedback == "up",
+                        "note": "Saved with basic fields only. Add ThumbsUpCount, ThumbsDownCount, Score, TotalInteractions fields to Airtable for full sync.",
+                    }
+        
         response.raise_for_status()
-        result = response.json()
-        print(f"Airtable feedback save success: {result}")
-        return {
-            "status": "saved",
-            "score": computed_score,
-            "thumbs_up": thumbs_up,
-            "thumbs_down": thumbs_down,
-            "total_interactions": total_interactions,
-            "fetch_more": feedback == "up",
-        }
+        return None
     except httpx.HTTPStatusError as e:
         print(f"Airtable feedback save error - Status: {e.response.status_code}, Body: {e.response.text}")
         return None
