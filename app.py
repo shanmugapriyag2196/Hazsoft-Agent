@@ -133,30 +133,32 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
                 "fetch_more": feedback == "up",
             }
         
-        # If fields don't exist in Airtable, retry with basic fields only
+        # If fields don't exist in Airtable, retry without unknown fields and append metrics to Response
         if response.status_code == 422:
             error_msg = response.text
             if "UNKNOWN_FIELD_NAME" in error_msg:
-                print(f"Airtable unknown field, retrying with basic fields only: {error_msg}")
-                basic_fields = {
+                print(f"Airtable unknown field, retrying with fallback: {error_msg}")
+                fallback_fields = {
                     "Question": question,
-                    "Response": answer,
+                    "Response": f"{answer} | [Metrics: ThumbsUp={thumbs_up}, ThumbsDown={thumbs_down}, Score={computed_score}, Interactions={total_interactions}]",
                     "Type": "Feedback",
                     "Date": datetime.datetime.now().isoformat(),
+                    "Score": computed_score,
+                    "TotalInteractions": total_interactions,
                 }
                 if existing_record_id:
                     response = httpx.patch(
                         f"{url}/{existing_record_id}",
                         headers=headers,
-                        json={"fields": basic_fields},
+                        json={"fields": fallback_fields},
                         timeout=30.0,
                     )
                 else:
-                    response = httpx.post(url, headers=headers, json={"records": [{"fields": basic_fields}]}, timeout=30.0)
+                    response = httpx.post(url, headers=headers, json={"records": [{"fields": fallback_fields}]}, timeout=30.0)
                 
                 if response.status_code in (200, 201):
                     result = response.json()
-                    print(f"Airtable feedback save success (basic fields): {result}")
+                    print(f"Airtable feedback save success (fallback): {result}")
                     return {
                         "status": "saved",
                         "score": computed_score,
@@ -164,7 +166,7 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
                         "thumbs_down": thumbs_down,
                         "total_interactions": total_interactions,
                         "fetch_more": feedback == "up",
-                        "note": "Saved with basic fields only. Add ThumbsUpCount, ThumbsDownCount, Score, TotalInteractions fields to Airtable for full sync.",
+                        "note": "ThumbsUpCount/ThumbsDownCount fields missing in Airtable. Metrics stored in Response field.",
                     }
         
         response.raise_for_status()
