@@ -500,20 +500,27 @@ function addMessage(text, role, sources, question) {
           feedback.appendChild(metrics);
           status.textContent = "Fetching more details...";
           const followUpQuestion = `Original question: ${question}\n\nThe user liked the previous answer. Provide additional important details, examples, or missing safety information from your general knowledge and the indexed SDS context.`;
-          const chatResponse = await fetch("/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question: followUpQuestion }),
-          });
-          const chatData = await chatResponse.json();
-          if (chatResponse.ok) {
-            const combinedResponse = `${text}\n\n${chatData.answer}`;
-            textNode.textContent = combinedResponse;
-            await fetch("/feedback", {
+          try {
+            const chatResponse = await fetch("/chat", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ question: question || "", answer: combinedResponse, feedback: value, update_only: true }),
+              body: JSON.stringify({ question: followUpQuestion }),
             });
+            const chatData = await chatResponse.json();
+            if (chatResponse.ok) {
+              const combinedResponse = `${text}\n\n${chatData.answer}`;
+              textNode.textContent = combinedResponse;
+              await fetch("/feedback", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question: question || "", answer: combinedResponse, feedback: value, update_only: true }),
+              });
+              status.textContent = "";
+            } else {
+              status.textContent = "Could not load more details";
+            }
+          } catch {
+            status.textContent = "Could not load more details";
           }
         } else {
           downBtn.classList.add("active-dislike");

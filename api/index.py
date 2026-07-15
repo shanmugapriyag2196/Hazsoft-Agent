@@ -95,6 +95,7 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
     existing_record_id = None
     thumbs_up = 0
     thumbs_down = 0
+    original_type = ""
 
     try:
         safe_question = question.replace("'", "\\'")
@@ -113,6 +114,7 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
             fields = existing.get("fields", {})
             thumbs_up = int(fields.get("ThumbsUpCount", 0) or 0)
             thumbs_down = int(fields.get("ThumbsDownCount", 0) or 0)
+            original_type = fields.get("Type", "")
             if not thumbs_up and not thumbs_down:
                 existing_response = fields.get("Response", "")
                 import re
@@ -137,7 +139,7 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
     fields = {
         "Question": question,
         "Response": answer,
-        "Type": "Feedback",
+        "Type": original_type or "Feedback",
         "Date": datetime.datetime.now().isoformat(),
         "Score": computed_score,
         "ThumbsUpCount": thumbs_up,
