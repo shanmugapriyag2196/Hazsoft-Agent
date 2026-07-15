@@ -493,12 +493,13 @@ function addMessage(text, role, sources, question) {
         const data = await response.json();
         if (value === "up") {
           upBtn.classList.add("active-like");
+          const airtable = data.airtable || {};
           const metrics = document.createElement("div");
           metrics.className = "feedback-metrics";
-          metrics.textContent = `👍 ${data.thumbs_up || 0} | 👎 ${data.thumbs_down || 0} | Score: ${(data.score || 0).toFixed(2)} | Interactions: ${data.total_interactions || 0}`;
+          metrics.textContent = `👍 ${airtable.thumbs_up || 0} | 👎 ${airtable.thumbs_down || 0} | Score: ${(airtable.score || 0).toFixed(2)} | Interactions: ${airtable.total_interactions || 0}`;
           feedback.appendChild(metrics);
           status.textContent = "Fetching more details...";
-          const followUpQuestion = `Original question: ${question}\n\nThe user liked the previous answer. Using ONLY the indexed SDS context, provide additional important details, examples, or missing safety information to supplement the previous response.`;
+          const followUpQuestion = `Original question: ${question}\n\nThe user liked the previous answer. Provide additional important details, examples, or missing safety information from your general knowledge and the indexed SDS context.`;
           const chatResponse = await fetch("/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -516,9 +517,10 @@ function addMessage(text, role, sources, question) {
           }
         } else {
           downBtn.classList.add("active-dislike");
+          const airtable = data.airtable || {};
           const metrics = document.createElement("div");
           metrics.className = "feedback-metrics";
-          metrics.textContent = `👍 ${data.thumbs_up || 0} | 👎 ${data.thumbs_down || 0} | Score: ${(data.score || 0).toFixed(2)} | Interactions: ${data.total_interactions || 0}`;
+          metrics.textContent = `👍 ${airtable.thumbs_up || 0} | 👎 ${airtable.thumbs_down || 0} | Score: ${(airtable.score || 0).toFixed(2)} | Interactions: ${airtable.total_interactions || 0}`;
           feedback.appendChild(metrics);
           status.textContent = "Noted";
         }
