@@ -278,3 +278,33 @@ def answer_question(question: str, weight: float = 1.0) -> Dict[str, object]:
         "answer": response.choices[0].message.content,
         "sources": contexts,
     }
+
+
+def general_answer(question: str) -> Dict[str, object]:
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a helpful SDS and safety assistant. "
+                "Use your general knowledge to answer the question accurately. "
+                "If the question is about SDS, hazards, PPE, or chemical safety, provide detailed, practical guidance. "
+                "Do not say you do not have enough information unless the topic is completely outside your knowledge."
+            ),
+        },
+        {
+            "role": "user",
+            "content": question,
+        },
+    ]
+
+    openai_client = get_openai_client()
+    response = openai_client.chat.completions.create(
+        model=CHAT_MODEL,
+        messages=messages,
+        temperature=0.3,
+    )
+
+    return {
+        "answer": response.choices[0].message.content,
+        "sources": [],
+    }

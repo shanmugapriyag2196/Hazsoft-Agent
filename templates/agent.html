@@ -499,9 +499,9 @@ function addMessage(text, role, sources, question) {
           metrics.textContent = `👍 ${airtable.thumbs_up || 0} | 👎 ${airtable.thumbs_down || 0} | Score: ${(airtable.score || 0).toFixed(2)} | Interactions: ${airtable.total_interactions || 0}`;
           feedback.appendChild(metrics);
           status.textContent = "Fetching more details...";
-          const followUpQuestion = `Original question: ${question}\n\nThe user liked the previous answer. Provide additional important details, examples, or missing safety information from your general knowledge and the indexed SDS context.`;
+          const followUpQuestion = `Original question: ${question}\n\nThe user liked the previous answer. Provide additional important details, examples, or missing safety information from your general knowledge.`;
           try {
-            const chatResponse = await fetch("/chat", {
+            const chatResponse = await fetch("/chat/general", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ question: followUpQuestion }),

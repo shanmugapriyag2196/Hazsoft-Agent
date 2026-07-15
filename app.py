@@ -22,7 +22,7 @@ AIRTABLE_TABLE = AIRTABLE_TABLE_ID or AIRTABLE_TABLE_NAME
 
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
-from rag import answer_question, index_chunks, rag_status
+from rag import answer_question, general_answer, index_chunks, rag_status
 
 app = FastAPI(title="Hazsoft SDS RAG Chatbot")
 templates = Jinja2Templates(directory="templates")
@@ -579,6 +579,18 @@ def chat(request: ChatRequest):
         search_score = sources[0].get("search_score", 0.0) if sources else 0.0
         rank = sources[0].get("rank", 0) if sources else 0
         save_to_airtable(question, result["answer"], material_type, search_score, rank)
+        return result
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/chat/general")
+def chat_general(request: ChatRequest):
+    question = request.question.strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="Question is required.")
+    try:
+        result = general_answer(question)
         return result
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
