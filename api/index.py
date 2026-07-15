@@ -112,8 +112,8 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
             existing = records[0]
             existing_record_id = existing.get("id")
             fields = existing.get("fields", {})
-            thumbs_up = int(fields.get("ThumbsUpCount", 0) or 0)
-            thumbs_down = int(fields.get("ThumbsDownCount", 0) or 0)
+            thumbs_up = int(fields.get("ThumpsUpCount", 0) or 0)
+            thumbs_down = int(fields.get("ThumpsDownCount", 0) or 0)
             original_type = fields.get("Type", "")
             if not thumbs_up and not thumbs_down:
                 existing_response = fields.get("Response", "")
@@ -142,8 +142,8 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
         "Type": original_type or "Feedback",
         "Date": datetime.datetime.now().isoformat(),
         "Score": computed_score,
-        "ThumbsUpCount": thumbs_up,
-        "ThumbsDownCount": thumbs_down,
+        "ThumpsUpCount": thumbs_up,
+        "ThumpsDownCount": thumbs_down,
         "TotalInteractions": total_interactions,
     }
 

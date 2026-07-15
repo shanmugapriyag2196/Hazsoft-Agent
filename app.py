@@ -88,8 +88,8 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
             existing = records[0]
             existing_record_id = existing.get("id")
             fields = existing.get("fields", {})
-            thumbs_up = int(fields.get("ThumbsUpCount", 0) or 0)
-            thumbs_down = int(fields.get("ThumbsDownCount", 0) or 0)
+            thumbs_up = int(fields.get("ThumpsUpCount", 0) or 0)
+            thumbs_down = int(fields.get("ThumpsDownCount", 0) or 0)
             existing_score = float(fields.get("Score", 1.0) or 1.0)
             existing_search_score = float(fields.get("SearchScore", 0.0) or 0.0)
             existing_rank = int(fields.get("Rank", 0) or 0)
@@ -121,8 +121,8 @@ def save_feedback_to_airtable(question: str, answer: str, feedback: str, score: 
         "Type": original_type or "Feedback",
         "Date": datetime.datetime.now().isoformat(),
         "Score": computed_score,
-        "ThumbsUpCount": thumbs_up,
-        "ThumbsDownCount": thumbs_down,
+        "ThumpsUpCount": thumbs_up,
+        "ThumpsDownCount": thumbs_down,
         "TotalInteractions": total_interactions,
         "SearchScore": existing_search_score,
         "Rank": existing_rank,
